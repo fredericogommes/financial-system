@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finanças do Fred</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #6b7280; --line: #e5e7eb;
+    --accent: #2563eb; --pos: #15803d; --neg: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1218; --card: #181c24; --text: #e8eaf0; --muted: #9aa3b2; --line: #2a303c;
+            --accent: #60a5fa; --pos: #4ade80; --neg: #f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 8px 0 4px; }
+  input, select, textarea, button { font: inherit; }
+  input, select, textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); }
+  button { padding: 9px 14px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
+  button.link { background: none; color: var(--accent); padding: 0; }
+  button.sec { background: var(--line); color: var(--text); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+  .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .list li:first-child { border-top: 0; }
+  .list li.click { cursor: pointer; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .pos { color: var(--pos); font-weight: 600; } .neg { color: var(--neg); font-weight: 600; }
+  .msg { padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; background: var(--line); }
+  .hidden { display: none !important; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tabs button { background: var(--card); color: var(--text); border: 1px solid var(--line); }
+  .tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Finanças do Fred</h1>
+    <button id="sair" class="link hidden">Sair</button>
+  </header>
+  <div id="aviso" class="msg hidden"></div>
+
+  <!-- Login -->
+  <section id="tela-login" class="card hidden">
+    <h2>Entrar</h2>
+    <form id="form-login">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" required autocomplete="username">
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" required autocomplete="current-password">
+      <div class="actions"><button>Entrar</button></div>
+    </form>
+  </section>
+
+  <div id="app" class="hidden">
+    <nav class="tabs">
+      <button data-aba="buscar" class="on">Buscar pessoa</button>
+      <button data-aba="saldos">Saldos</button>
+      <button data-aba="nova">Nova pessoa</button>
+    </nav>
+
+    <!-- Buscar -->
+    <section id="aba-buscar">
+      <div class="card">
+        <label for="busca">Nome, apelido, CPF ou telefone</label>
+        <input id="busca" placeholder="ex.: joao" autocomplete="off">
+        <ul id="resultados" class="list" style="margin-top:8px"></ul>
+      </div>
+
+      <div id="pessoa" class="hidden">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:start">
+            <div>
+              <h2 id="p-nome" style="margin-bottom:4px"></h2>
+              <div id="p-info" class="muted"></div>
+            </div>
+            <button class="sec" id="editar">Editar</button>
+          </div>
+          <p id="p-saldo" style="font-size:18px;margin:12px 0 0"></p>
+        </div>
+
+        <div class="card">
+          <h2>Novo lançamento</h2>
+          <form id="form-mov">
+            <div class="row">
+              <div>
+                <label for="m-tipo">Tipo</label>
+                <select id="m-tipo" required>
+                  <option value="emprestei">Emprestei para a pessoa</option>
+                  <option value="recebi">Recebi da pessoa</option>
+                  <option value="paguei">Paguei a pessoa</option>
+                  <option value="peguei_emprestado">Peguei emprestado da pessoa</option>
+                </select>
+              </div>
+              <div>
+                <label for="m-valor">Valor (R$)</label>
+                <input id="m-valor" inputmode="decimal" placeholder="0,00" required>
+              </div>
+              <div>
+                <label for="m-data">Data</label>
+                <input id="m-data" type="date" required>
+              </div>
+              <div>
+                <label for="m-venc">Vencimento (opcional)</label>
+                <input id="m-venc" type="date">
+              </div>
+            </div>
+            <label for="m-desc">Descrição</label>
+            <input id="m-desc" placeholder="ex.: conserto do carro">
+            <div class="actions"><button>Salvar lançamento</button></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Extrato</h2>
+          <ul id="extrato" class="list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Saldos -->
+    <section id="aba-saldos" class="hidden">
+      <div class="card">
+        <h2>Quem te deve e quem você deve</h2>
+        <ul id="lista-saldos" class="list"></ul>
+      </div>
+    </section>
+
+    <!-- Nova / editar pessoa -->
+    <section id="aba-nova" class="hidden">
+      <div class="card">
+        <h2 id="titulo-pessoa">Nova pessoa</h2>
+        <form id="form-pessoa">
+          <input type="hidden" id="f-id">
+          <div class="row">
+            <div><label for="f-nome">Nome *</label><input id="f-nome" required></div>
+            <div><label for="f-apelido">Apelido</label><input id="f-apelido"></div>
+            <div><label for="f-cpf">CPF</label><input id="f-cpf" inputmode="numeric"></div>
+            <div><label for="f-tel">Telefone</label><input id="f-tel" inputmode="tel"></div>
+            <div><label for="f-email">E-mail</label><input id="f-email" type="email"></div>
+            <div><label for="f-pix">Chave Pix</label><input id="f-pix"></div>
+          </div>
+          <label for="f-obs">Observações</label>
+          <textarea id="f-obs" rows="3"></textarea>
+          <div class="actions"><button>Salvar pessoa</button></div>
+        </form>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// A chave publicável pode ficar no navegador: os dados só aparecem para quem fizer login (RLS).
+const SUPABASE_URL = "https://nbwozmphkejikpkmfaqh.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vs5xBJpySadmlwsdcupLIg_SQsfQ0Fz";
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = (id) => document.getElementById(id);
+const brl = (v) => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const dataBR = (d) => d ? d.split("-").reverse().join("/") : "";
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ROTULO = { paguei: "Paguei", recebi: "Recebi", emprestei: "Emprestei", peguei_emprestado: "Peguei emprestado" };
+let pessoaAtual = null;
+
+function avisar(texto, erro = false) {
+  const el = $("aviso");
+  el.textContent = texto;
+  el.style.color = erro ? "var(--neg)" : "";
+  el.classList.remove("hidden");
+  clearTimeout(avisar.t);
+  avisar.t = setTimeout(() => el.classList.add("hidden"), 4000);
+}
+
+function textoSaldo(saldo) {
+  saldo = Number(saldo);
+  if (saldo > 0) return `<span class="pos">Te deve ${brl(saldo)}</span>`;
+  if (saldo < 0) return `<span class="neg">Você deve ${brl(-saldo)}</span>`;
+  return `<span class="muted">Quite</span>`;
+}
+
+// Aceita "500", "150,90", "1.000", "1.234,56"
+function lerValor(t) {
+  t = t.replace(/^r\$/i, "").trim();
+  const n = /,\d{1,2}$/.test(t) || /\.\d{3}/.test(t) ? t.replace(/\./g, "").replace(",", ".") : t.replace(",", ".");
+  const v = Number(n);
+  return v > 0 ? Math.round(v * 100) / 100 : null;
+}
+
+// ---- Login ----
+async function iniciar() {
+  const { data: { session } } = await db.auth.getSession();
+  $("tela-login").classList.toggle("hidden", !!session);
+  $("app").classList.toggle("hidden", !session);
+  $("sair").classList.toggle("hidden", !session);
+}
+$("form-login").onsubmit = async (e) => {
+  e.preventDefault();
+  const { error } = await db.auth.signInWithPassword({ email: $("email").value, password: $("senha").value });
+  if (error) return avisar("E-mail ou senha incorretos.", true);
+  iniciar();
+};
+$("sair").onclick = async () => { await db.auth.signOut(); iniciar(); };
+
+// ---- Abas ----
+function abrirAba(nome) {
+  document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("on", b.dataset.aba === nome));
+  ["buscar", "saldos", "nova"].forEach((a) => $("aba-" + a).classList.toggle("hidden", a !== nome));
+  if (nome === "saldos") carregarSaldos();
+}
+document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => {
+  if (b.dataset.aba === "nova") preencherFormPessoa(null);
+  abrirAba(b.dataset.aba);
+});
+
+// ---- Busca ----
+let tBusca;
+$("busca").oninput = () => {
+  clearTimeout(tBusca);
+  tBusca = setTimeout(buscar, 250);
+};
+async function buscar() {
+  const termo = $("busca").value.trim();
+  if (!termo) return ($("resultados").innerHTML = "");
+  const { data, error } = await db.rpc("buscar_pessoas", { termo });
+  if (error) return avisar("Erro na busca: " + error.message, true);
+  $("resultados").innerHTML = data.length
+    ? data.map((p) => `<li class="click" data-id="${p.id}"><span>${esc(p.nome)}${p.apelido ? ` <span class="muted">(${esc(p.apelido)})</span>` : ""}</span><span class="muted">${esc(p.telefone ?? "")}</span></li>`).join("")
+    : `<li class="muted">Ninguém encontrado. <button class="link" id="cadastrar-busca">Cadastrar "${esc(termo)}"</button></li>`;
+  document.querySelectorAll("#resultados li[data-id]").forEach((li) => li.onclick = () => abrirPessoa(Number(li.dataset.id)));
+  const cad = $("cadastrar-busca");
+  if (cad) cad.onclick = () => { preencherFormPessoa({ nome: termo }); abrirAba("nova"); };
+}
+
+// ---- Pessoa ----
+async function abrirPessoa(id) {
+  const [{ data: p }, { data: s }, { data: movs }] = await Promise.all([
+    db.from("pessoas").select("*").eq("id", id).single(),
+    db.from("saldo_por_pessoa").select("*").eq("pessoa_id", id).single(),
+    db.from("movimentacoes").select("*").eq("pessoa_id", id).order("data", { ascending: false }).order("id", { ascending: false }).limit(50),
+  ]);
+  pessoaAtual = p;
+  abrirAba("buscar");
+  $("resultados").innerHTML = "";
+  $("pessoa").classList.remove("hidden");
+  $("p-nome").textContent = p.nome;
+  $("p-info").textContent = [p.apelido, p.cpf && "CPF " + p.cpf, p.telefone, p.email, p.chave_pix && "Pix " + p.chave_pix].filter(Boolean).join(" · ");
+  $("p-saldo").innerHTML = textoSaldo(s?.saldo ?? 0);
+  $("extrato").innerHTML = movs.length
+    ? movs.map((m) => `<li><span>${dataBR(m.data)} · ${ROTULO[m.tipo]}${m.descricao ? ` <span class="muted">— ${esc(m.descricao)}</span>` : ""}${m.vencimento ? ` <span class="muted">(vence ${dataBR(m.vencimento)})</span>` : ""}${m.origem === "telegram" ? ` <span class="muted">· Telegram</span>` : ""}</span><span>${brl(m.valor)}</span></li>`).join("")
+    : `<li class="muted">Sem movimentações ainda.</li>`;
+  $("m-data").value = new Date().toLocaleDateString("sv-SE");
+}
+
+$("form-mov").onsubmit = async (e) => {
+  e.preventDefault();
+  const valor = lerValor($("m-valor").value);
+  if (!valor) return avisar("Valor inválido.", true);
+  const { error } = await db.from("movimentacoes").insert({
+    pessoa_id: pessoaAtual.id,
+    tipo: $("m-tipo").value,
+    valor,
+    data: $("m-data").value,
+    vencimento: $("m-venc").value || null,
+    descricao: $("m-desc").value.trim() || null,
+  });
+  if (error) return avisar("Erro ao salvar: " + error.message, true);
+  e.target.reset();
+  avisar("Lançamento salvo.");
+  abrirPessoa(pessoaAtual.id);
+};
+
+$("editar").onclick = () => { preencherFormPessoa(pessoaAtual); abrirAba("nova"); };
+
+function preencherFormPessoa(p) {
+  $("titulo-pessoa").textContent = p?.id ? "Editar pessoa" : "Nova pessoa";
+  $("f-id").value = p?.id ?? "";
+  $("f-nome").value = p?.nome ?? "";
+  $("f-apelido").value = p?.apelido ?? "";
+  $("f-cpf").value = p?.cpf ?? "";
+  $("f-tel").value = p?.telefone ?? "";
+  $("f-email").value = p?.email ?? "";
+  $("f-pix").value = p?.chave_pix ?? "";
+  $("f-obs").value = p?.observacoes ?? "";
+}
+
+$("form-pessoa").onsubmit = async (e) => {
+  e.preventDefault();
+  const dados = {
+    nome: $("f-nome").value.trim(),
+    apelido: $("f-apelido").value.trim() || null,
+    cpf: $("f-cpf").value.replace(/\D/g, "") || null,
+    telefone: $("f-tel").value.trim() || null,
+    email: $("f-email").value.trim() || null,
+    chave_pix: $("f-pix").value.trim() || null,
+    observacoes: $("f-obs").value.trim() || null,
+  };
+  const id = $("f-id").value;
+  const { data, error } = id
+    ? await db.from("pessoas").update(dados).eq("id", id).select().single()
+    : await db.from("pessoas").insert(dados).select().single();
+  if (error) return avisar(error.code === "23505" ? "Já existe uma pessoa com esse CPF." : "Erro ao salvar: " + error.message, true);
+  avisar("Pessoa salva.");
+  abrirPessoa(data.id);
+};
+
+// ---- Saldos ----
+async function carregarSaldos() {
+  const { data, error } = await db.from("saldo_por_pessoa").select("*").order("saldo", { ascending: false });
+  if (error) return avisar("Erro: " + error.message, true);
+  const comSaldo = data.filter((s) => Number(s.saldo) !== 0);
+  const total = (f) => comSaldo.filter(f).reduce((t, s) => t + Math.abs(Number(s.saldo)), 0);
+  $("lista-saldos").innerHTML = (comSaldo.length
+    ? `<li><span>Total que te devem</span><span class="pos">${brl(total((s) => s.saldo > 0))}</span></li>
+       <li><span>Total que você deve</span><span class="neg">${brl(total((s) => s.saldo < 0))}</span></li>` +
+      comSaldo.map((s) => `<li class="click" data-id="${s.pessoa_id}"><span>${esc(s.nome)} <span class="muted">· última em ${dataBR(s.ultima_movimentacao)}</span></span>${textoSaldo(s.saldo)}</li>`).join("")
+    : `<li class="muted">Ninguém te deve e você não deve a ninguém.</li>`);
+  document.querySelectorAll("#lista-saldos li[data-id]").forEach((li) => li.onclick = () => abrirPessoa(Number(li.dataset.id)));
+}
+
+db.auth.onAuthStateChange(() => iniciar());
+iniciar();
+</script>
+</body>
+</html>
