@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurações · Finanças do Fred</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<nav class="sidebar" id="sidebar"></nav>
+<main class="conteudo">
+  <div class="cabecalho"><h1>Configurações</h1></div>
+
+  <div class="grade-2" style="margin-bottom:16px">
+    <div class="card">
+      <h2>Contas e carteiras <button class="btn-link" id="nova-conta">+ Nova conta</button></h2>
+      <div id="lista-contas"></div>
+    </div>
+    <div class="card">
+      <h2>Categorias <button class="btn-link" id="nova-categoria">+ Nova categoria</button></h2>
+      <div id="lista-categorias"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Bot do Telegram</h2>
+    <p class="fino muted" style="margin:0 0 10px">Os lançamentos feitos pelo bot aparecem aqui marcados como <span class="tag t-cinza">Telegram</span>.</p>
+    <table><tbody id="tabela-bot"></tbody></table>
+  </div>
+
+  <div class="modal" id="modal-conta" hidden>
+    <form class="caixa" id="form-conta">
+      <h2>Conta</h2>
+      <input type="hidden" id="c-id">
+      <div class="form-grade">
+        <div class="col-2"><label for="c-nome">Nome</label><input id="c-nome" required placeholder="ex.: Nubank"></div>
+        <div><label for="c-tipo">Tipo</label><select id="c-tipo">
+          <option value="conta_corrente">Conta corrente</option>
+          <option value="poupanca">Poupança</option>
+          <option value="carteira">Carteira / dinheiro</option>
+          <option value="cartao">Cartão de crédito</option>
+          <option value="investimento">Investimento</option>
+        </select></div>
+        <div><label for="c-saldo">Saldo inicial (R$)</label><input id="c-saldo" inputmode="decimal" placeholder="0,00"></div>
+        <div class="col-2"><label for="c-inst">Instituição</label><input id="c-inst"></div>
+      </div>
+      <div class="rodape">
+        <button type="button" class="btn" onclick="document.getElementById('modal-conta').hidden=true">Cancelar</button>
+        <button class="btn btn-primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal" id="modal-categoria" hidden>
+    <form class="caixa" id="form-categoria">
+      <h2>Categoria</h2>
+      <input type="hidden" id="k-id">
+      <div class="form-grade">
+        <div class="col-2"><label for="k-nome">Nome</label><input id="k-nome" required></div>
+        <div><label for="k-natureza">Natureza</label><select id="k-natureza">
+          <option value="despesa">Despesa</option><option value="receita">Receita</option></select></div>
+        <div><label for="k-cor">Cor</label><input id="k-cor" type="color" value="#6b7280" style="padding:4px;height:38px"></div>
+      </div>
+      <div class="rodape">
+        <button type="button" class="btn" onclick="document.getElementById('modal-categoria').hidden=true">Cancelar</button>
+        <button class="btn btn-primario">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+</main>
+<div id="aviso" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+
+<script src="js/app.js"></script>
+<script src="js/configuracoes.js"></script>
+</body>
+</html>

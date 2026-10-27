@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pessoas · Finanças do Fred</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<nav class="sidebar" id="sidebar"></nav>
+<main class="conteudo">
+  <div class="cabecalho">
+    <h1>Pessoas</h1>
+    <div class="acoes">
+      <button class="btn btn-primario" id="nova-pessoa">+ Nova pessoa</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grade-3">
+    <div class="card">
+      <h2>Saldos por pessoa</h2>
+      <div class="filtros" style="margin-bottom:8px">
+        <div class="campo" style="flex:1"><input id="busca" placeholder="Buscar por nome, apelido, CPF ou telefone" autocomplete="off"></div>
+        <div class="campo"><select id="f-saldo">
+          <option value="abertos">Com saldo em aberto</option>
+          <option value="todos">Todas as pessoas</option>
+          <option value="devem">Quem me deve</option>
+          <option value="devo">Quem eu devo</option>
+        </select></div>
+      </div>
+      <div id="lista"></div>
+    </div>
+    <div class="card" id="ficha">
+      <h2>Ficha</h2>
+      <p class="muted fino">Escolha alguém na lista ao lado.</p>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-pessoa" hidden>
+    <form class="caixa" id="form-pessoa">
+      <h2 id="titulo-pessoa">Nova pessoa</h2>
+      <input type="hidden" id="p-id">
+      <div class="form-grade">
+        <div class="col-2"><label for="p-nome">Nome</label><input id="p-nome" required></div>
+        <div><label for="p-apelido">Apelido</label><input id="p-apelido"></div>
+        <div><label for="p-cpf">CPF</label><input id="p-cpf" inputmode="numeric"></div>
+        <div><label for="p-tel">Telefone</label><input id="p-tel"></div>
+        <div><label for="p-email">E-mail</label><input id="p-email" type="email"></div>
+        <div class="col-2"><label for="p-pix">Chave Pix</label><input id="p-pix"></div>
+        <div class="col-2"><label for="p-obs">Observações</label><textarea id="p-obs" rows="2"></textarea></div>
+      </div>
+      <div class="rodape">
+        <button type="button" class="btn" id="p-cancelar">Cancelar</button>
+        <button class="btn btn-primario">Salvar pessoa</button>
+      </div>
+    </form>
+  </div>
+
+</main>
+<div id="aviso" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+
+<script src="js/app.js"></script>
+<script src="js/pessoas.js"></script>
+</body>
+</html>

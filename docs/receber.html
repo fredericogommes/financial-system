@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contas a receber · Finanças do Fred</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<nav class="sidebar" id="sidebar"></nav>
+<main class="conteudo">
+  <div class="cabecalho">
+    <h1>Contas a receber</h1>
+    <div class="acoes">
+      <button class="btn btn-primario" onclick="abrirLancamento(null,{tipo:'receita',status:'pendente'})">+ Conta a receber</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card">
+    <div class="filtros">
+      <div class="campo"><label for="f-busca">Buscar</label><input id="f-busca" placeholder="descrição ou pessoa"></div>
+      <div class="campo"><label for="f-situacao">Situação</label>
+        <select id="f-situacao">
+          <option value="pendente">Em aberto</option>
+          <option value="vencido">Vencidos</option>
+          <option value="liquidado">Baixados</option>
+          <option value="todos">Todos</option>
+        </select></div>
+      <div class="campo"><label for="f-de">De</label><input id="f-de" type="date"></div>
+      <div class="campo"><label for="f-ate">Até</label><input id="f-ate" type="date"></div>
+      <div class="campo"><label for="f-categoria">Categoria</label><select id="f-categoria"></select></div>
+      <button class="btn" id="f-limpar">Limpar</button>
+    </div>
+    <p class="muted fino" style="margin:0 0 10px">Tudo que entra: receitas, pagamentos que você tem a receber e empréstimos que pegou.</p>
+    <div id="tabela"></div>
+  </div>
+
+</main>
+<div id="aviso" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+
+<script src="js/app.js"></script>
+<script src="js/lista.js"></script>
+<script src="js/receber.js"></script>
+</body>
+</html>
