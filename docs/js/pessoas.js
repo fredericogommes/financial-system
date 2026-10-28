@@ -26,13 +26,10 @@ async function recarregar() {
   if (ids) lista = lista.filter((s) => ids.includes(s.pessoa_id));
 
   const total = (f) => saldos.filter(f).reduce((t, s) => t + Math.abs(Number(s.saldo)), 0);
-  $("kpis").innerHTML = `
-    <div class="kpi"><div class="bolha b-verde">&#8599;</div><div>
-      <div class="rotulo">Total que te devem</div><div class="valor">${brl(total((s) => s.saldo > 0))}</div></div></div>
-    <div class="kpi"><div class="bolha b-vermelho">&#8600;</div><div>
-      <div class="rotulo">Total que você deve</div><div class="valor">${brl(total((s) => s.saldo < 0))}</div></div></div>
-    <div class="kpi"><div class="bolha b-azul">&#128100;</div><div>
-      <div class="rotulo">Pessoas cadastradas</div><div class="valor">${saldos.length}</div></div></div>`;
+  $("kpis").innerHTML =
+    kpi("Total que te devem", brl(total((s) => s.saldo > 0)), "verde", "receber") +
+    kpi("Total que você deve", brl(total((s) => s.saldo < 0)), "vermelho", "pagar") +
+    kpi("Pessoas cadastradas", saldos.length, "azul", "pessoas");
 
   $("lista").innerHTML = lista.length
     ? `<table><thead><tr><th>Pessoa</th><th>Última movimentação</th><th class="num">Saldo</th></tr></thead>
@@ -53,7 +50,7 @@ async function abrirPessoa(id, silencioso) {
       .order("data", { ascending: false }).order("id", { ascending: false }).limit(50),
   ]);
   pessoaAtual = p;
-  const info = [p.apelido, p.cpf && "CPF " + p.cpf, p.telefone, p.email, p.chave_pix && "Pix " + p.chave_pix]
+  const info = [p.apelido, p.telefone, p.chave_pix && "Pix " + p.chave_pix]
     .filter(Boolean).join(" · ");
   $("ficha").innerHTML = `
     <h2>${esc(p.nome)} <button class="btn-link" onclick="formPessoa(pessoaAtual)">Editar</button></h2>
@@ -82,9 +79,7 @@ function formPessoa(p) {
   $("p-id").value = p?.id ?? "";
   $("p-nome").value = p?.nome ?? "";
   $("p-apelido").value = p?.apelido ?? "";
-  $("p-cpf").value = p?.cpf ?? "";
   $("p-tel").value = p?.telefone ?? "";
-  $("p-email").value = p?.email ?? "";
   $("p-pix").value = p?.chave_pix ?? "";
   $("p-obs").value = p?.observacoes ?? "";
   $("modal-pessoa").hidden = false;
@@ -93,6 +88,13 @@ function formPessoa(p) {
 
 iniciarPagina("pessoas", async () => {
   $("nova-pessoa").onclick = () => formPessoa(null);
+  $("p-tel").oninput = (e) => {   // (00) 00000-0000
+    const d = e.target.value.replace(/\D/g, "").slice(0, 11);
+    e.target.value = d.length <= 2 ? d.replace(/^(\d+)/, "($1")
+      : d.length <= 6 ? d.replace(/^(\d{2})(\d+)/, "($1) $2")
+      : d.length <= 10 ? d.replace(/^(\d{2})(\d{4})(\d+)/, "($1) $2-$3")
+      : d.replace(/^(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
+  };
   $("p-cancelar").onclick = () => ($("modal-pessoa").hidden = true);
   $("modal-pessoa").onclick = (e) => { if (e.target === $("modal-pessoa")) $("modal-pessoa").hidden = true; };
   let t;
@@ -104,9 +106,7 @@ iniciarPagina("pessoas", async () => {
     const dados = {
       nome: $("p-nome").value.trim(),
       apelido: $("p-apelido").value.trim() || null,
-      cpf: $("p-cpf").value.replace(/\D/g, "") || null,
       telefone: $("p-tel").value.trim() || null,
-      email: $("p-email").value.trim() || null,
       chave_pix: $("p-pix").value.trim() || null,
       observacoes: $("p-obs").value.trim() || null,
     };
@@ -114,7 +114,7 @@ iniciarPagina("pessoas", async () => {
     const { data, error } = id
       ? await db.from("pessoas").update(dados).eq("id", id).select().single()
       : await db.from("pessoas").insert(dados).select().single();
-    if (error) return avisar(error.code === "23505" ? "Já existe alguém com esse CPF." : "Erro: " + error.message, true);
+    if (error) return avisar("Erro: " + error.message, true);
     $("modal-pessoa").hidden = true;
     await carregarAux(true);
     avisar("Pessoa salva.");

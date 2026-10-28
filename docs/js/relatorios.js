@@ -24,20 +24,23 @@ async function recarregar() {
     db.from("v_fluxo_mensal").select("*").gte("mes", `${ano}-01-01`).lte("mes", `${ano}-12-01`).order("mes"),
     db.from("v_por_categoria").select("*").gte("mes", `${ano}-01-01`).lte("mes", `${ano}-12-01`),
   ]);
-  dadosAno = fluxo || [];
+  // Todos os meses do ano (até o mês atual, se for o ano corrente), mesmo os sem lançamento
+  const ultimoMes = Number(ano) === new Date().getFullYear() ? new Date().getMonth() + 1 : 12;
+  const porMes = new Map((fluxo || []).map((f) => [String(f.mes).slice(0, 7), f]));
+  dadosAno = Array.from({ length: ultimoMes }, (_, i) => {
+    const mes = `${ano}-${String(i + 1).padStart(2, "0")}`;
+    const f = porMes.get(mes);
+    return { mes, entradas: Number(f?.entradas || 0), saidas: Number(f?.saidas || 0), resultado: Number(f?.resultado || 0) };
+  });
 
   const entradas = dadosAno.reduce((t, f) => t + Number(f.entradas), 0);
   const saidas = dadosAno.reduce((t, f) => t + Number(f.saidas), 0);
-  const meses = dadosAno.length || 1;
-  $("kpis").innerHTML = `
-    <div class="kpi"><div class="bolha b-verde">&#8599;</div><div>
-      <div class="rotulo">Entradas em ${ano}</div><div class="valor">${brl(entradas)}</div></div></div>
-    <div class="kpi"><div class="bolha b-vermelho">&#8600;</div><div>
-      <div class="rotulo">Saídas em ${ano}</div><div class="valor">${brl(saidas)}</div></div></div>
-    <div class="kpi"><div class="bolha ${entradas - saidas >= 0 ? "b-verde" : "b-amarelo"}">&#8721;</div><div>
-      <div class="rotulo">Resultado</div><div class="valor">${brl(entradas - saidas)}</div></div></div>
-    <div class="kpi"><div class="bolha b-azul">&#8960;</div><div>
-      <div class="rotulo">Gasto médio por mês</div><div class="valor">${brl(saidas / meses)}</div></div></div>`;
+  const meses = dadosAno.length || 1; // meses do ano até agora
+  $("kpis").innerHTML =
+    kpi(`Entradas em ${ano}`, brl(entradas), "verde", "receber") +
+    kpi(`Saídas em ${ano}`, brl(saidas), "vermelho", "pagar") +
+    kpi("Resultado", brl(entradas - saidas), entradas - saidas >= 0 ? "verde" : "amarelo", "resultado") +
+    kpi("Gasto médio por mês", brl(saidas / meses), "azul", "media");
 
   if (g1) g1.destroy();
   g1 = new Chart($("gr-ano"), {
@@ -68,8 +71,11 @@ async function recarregar() {
   };
   if (g2) g2.destroy();
   if (g3) g3.destroy();
-  g2 = rosca($("gr-despesas"), agrupar("despesa"));
-  g3 = rosca($("gr-receitas"), agrupar("receita"));
+  const desp = agrupar("despesa"), rec = agrupar("receita");
+  g2 = rosca($("gr-despesas"), desp);
+  g3 = rosca($("gr-receitas"), rec);
+  $("box-despesas").hidden = !desp.length; $("vazio-despesas").hidden = !!desp.length;
+  $("box-receitas").hidden = !rec.length; $("vazio-receitas").hidden = !!rec.length;
 
   $("tabela-ano").innerHTML = dadosAno.length
     ? `<table><thead><tr><th>Mês</th><th class="num">Entradas</th><th class="num">Saídas</th><th class="num">Resultado</th></tr></thead>

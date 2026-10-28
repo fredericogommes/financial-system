@@ -20,7 +20,9 @@ const brl = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", c
 const dataBR = (d) => (d ? String(d).slice(0, 10).split("-").reverse().join("/") : "—");
 const hoje = () => new Date().toLocaleDateString("sv-SE");
 const mesAtual = () => hoje().slice(0, 7);
-const nomeMes = (m) => new Date(m + "-02").toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }).replace(".", "");
+const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+/* "2026-10" → "Out/26" */
+const nomeMes = (m) => `${MESES[Number(m.slice(5, 7)) - 1]}/${m.slice(2, 4)}`;
 
 /* Aceita "500", "150,90", "1.000", "1.234,56" */
 function lerValor(t) {
@@ -28,6 +30,42 @@ function lerValor(t) {
   const n = /,\d{1,2}$/.test(t) || /\.\d{3}/.test(t) ? t.replace(/\./g, "").replace(",", ".") : t.replace(",", ".");
   const v = Number(n);
   return v > 0 ? Math.round(v * 100) / 100 : null;
+}
+
+/* Campo de valor com vírgula e ponto automáticos: digitar 123456 mostra 1.234,56 */
+const valorParaCampo = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function mascaraMoeda(input) {
+  input.setAttribute("inputmode", "numeric");
+  input.setAttribute("placeholder", "0,00");
+  input.addEventListener("input", () => {
+    const digitos = input.value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 12);
+    input.value = digitos ? valorParaCampo(Number(digitos) / 100) : "";
+  });
+}
+
+/* ---------------- Cartões de resumo (mesmo visual em todas as telas) ---------------- */
+const IC = {
+  saldo:    '<rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><circle cx="16.5" cy="14.5" r="1.5"/>',
+  receber:  '<circle cx="12" cy="12" r="10"/><polyline points="8 12 12 8 16 12"/><line x1="12" y1="16" x2="12" y2="8"/>',
+  pagar:    '<circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/>',
+  resultado:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  alerta:   '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  lista:    '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  pessoas:  '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  media:    '<line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="18" y1="20" x2="18" y2="4"/>',
+  calendario:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  documento:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/>',
+  relogio:  '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  seta:     '<polyline points="9 18 15 12 9 6"/>',
+};
+const icone = (nome, tam = 20) =>
+  `<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[nome]}</svg>`;
+
+/* cor: verde | vermelho | amarelo | azul. nota: linha pequena abaixo do valor */
+function kpi(rotulo, valor, cor, ico, nota = "") {
+  return `<div class="kpi"><div class="kpi-icone k-${cor}">${icone(ico, 26)}</div>
+    <div><div class="kpi-rotulo">${rotulo}</div><div class="kpi-valor">${valor}</div>
+    ${nota ? `<div class="kpi-nota">${nota}</div>` : ""}</div></div>`;
 }
 
 function avisar(texto, erro = false) {
@@ -145,7 +183,7 @@ function modalLancamento() {
       <input type="hidden" id="x-id">
       <div class="form-grade">
         <div><label for="x-tipo">Tipo</label><select id="x-tipo"></select></div>
-        <div><label for="x-valor">Valor (R$)</label><input id="x-valor" inputmode="decimal" placeholder="0,00" required></div>
+        <div><label for="x-valor">Valor (R$)</label><input id="x-valor" required></div>
         <div><label for="x-status">Situação</label>
           <select id="x-status"><option value="liquidado">Já aconteceu</option><option value="pendente">Em aberto</option></select></div>
         <div><label for="x-data">Data</label><input id="x-data" type="date" required></div>
@@ -164,6 +202,7 @@ function modalLancamento() {
   $("x-cancelar").onclick = () => (el.hidden = true);
   el.onclick = (ev) => { if (ev.target === el) el.hidden = true; };
   $("x-tipo").onchange = aplicarTipo;
+  mascaraMoeda($("x-valor"));
   $("form-lanc").onsubmit = salvarLancamento;
 }
 
@@ -191,7 +230,7 @@ async function abrirLancamento(mov, padrao = {}) {
   $("x-id").value = mov?.id ?? "";
   $("x-tipo").value = mov?.tipo ?? padrao.tipo ?? "despesa";
   aplicarTipo();
-  $("x-valor").value = mov ? String(mov.valor).replace(".", ",") : "";
+  $("x-valor").value = mov ? valorParaCampo(mov.valor) : "";
   $("x-status").value = mov?.status ?? padrao.status ?? "liquidado";
   $("x-data").value = (mov?.data || hoje()).slice(0, 10);
   $("x-venc").value = mov?.vencimento ? mov.vencimento.slice(0, 10) : "";

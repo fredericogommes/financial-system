@@ -23,7 +23,7 @@
     <div class="card">
       <h2>Saldos por pessoa</h2>
       <div class="filtros" style="margin-bottom:8px">
-        <div class="campo" style="flex:1"><input id="busca" placeholder="Buscar por nome, apelido, CPF ou telefone" autocomplete="off"></div>
+        <div class="campo" style="flex:1"><input id="busca" placeholder="Buscar por nome, apelido ou telefone" autocomplete="off"></div>
         <div class="campo"><select id="f-saldo">
           <option value="abertos">Com saldo em aberto</option>
           <option value="todos">Todas as pessoas</option>
@@ -46,11 +46,9 @@
       <div class="form-grade">
         <div class="col-2"><label for="p-nome">Nome</label><input id="p-nome" required></div>
         <div><label for="p-apelido">Apelido</label><input id="p-apelido"></div>
-        <div><label for="p-cpf">CPF</label><input id="p-cpf" inputmode="numeric"></div>
-        <div><label for="p-tel">Telefone</label><input id="p-tel"></div>
-        <div><label for="p-email">E-mail</label><input id="p-email" type="email"></div>
+        <div><label for="p-tel">Telefone</label><input id="p-tel" inputmode="tel" placeholder="(00) 00000-0000"></div>
         <div class="col-2"><label for="p-pix">Chave Pix</label><input id="p-pix"></div>
-        <div class="col-2"><label for="p-obs">Observações</label><textarea id="p-obs" rows="2"></textarea></div>
+        <div class="col-2"><label for="p-obs">Observações</label><textarea id="p-obs" rows="3"></textarea></div>
       </div>
       <div class="rodape">
         <button type="button" class="btn" id="p-cancelar">Cancelar</button>

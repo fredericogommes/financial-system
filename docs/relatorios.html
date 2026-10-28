@@ -22,12 +22,12 @@
 
   <div class="card" style="margin-bottom:16px">
     <h2>Entradas e saídas por mês</h2>
-    <canvas id="gr-ano" height="90"></canvas>
+    <div class="caixa-grafico" style="height:280px"><canvas id="gr-ano"></canvas></div>
   </div>
 
   <div class="grade-2" style="margin-bottom:16px">
-    <div class="card"><h2>Despesas por categoria</h2><canvas id="gr-despesas" height="170"></canvas></div>
-    <div class="card"><h2>Receitas por categoria</h2><canvas id="gr-receitas" height="170"></canvas></div>
+    <div class="card"><h2>Despesas por categoria</h2><div class="caixa-grafico" id="box-despesas" style="height:260px"><canvas id="gr-despesas"></canvas></div><div class="vazio" id="vazio-despesas" hidden>Nenhuma despesa neste ano.</div></div>
+    <div class="card"><h2>Receitas por categoria</h2><div class="caixa-grafico" id="box-receitas" style="height:260px"><canvas id="gr-receitas"></canvas></div><div class="vazio" id="vazio-receitas" hidden>Nenhuma receita neste ano.</div></div>
   </div>
 
   <div class="card">
