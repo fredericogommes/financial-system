@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatórios · Finanças do Fred</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<nav class="sidebar" id="sidebar"></nav>
+<main class="conteudo">
+  <div class="cabecalho">
+    <h1>Relatórios</h1>
+    <div class="acoes">
+      <select id="ano" style="width:auto"></select>
+      <button class="btn" id="exportar">Exportar CSV do ano</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h2>Entradas e saídas por mês</h2>
+    <canvas id="gr-ano" height="90"></canvas>
+  </div>
+
+  <div class="grade-2" style="margin-bottom:16px">
+    <div class="card"><h2>Despesas por categoria</h2><canvas id="gr-despesas" height="170"></canvas></div>
+    <div class="card"><h2>Receitas por categoria</h2><canvas id="gr-receitas" height="170"></canvas></div>
+  </div>
+
+  <div class="card">
+    <h2>Resumo mês a mês</h2>
+    <div id="tabela-ano"></div>
+  </div>
+
+</main>
+<div id="aviso" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/relatorios.js"></script>
+</body>
+</html>
