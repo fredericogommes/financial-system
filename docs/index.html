@@ -10,44 +10,65 @@
 <header class="topbar" id="topbar"></header>
 <nav class="sidebar" id="sidebar"></nav>
 <main class="conteudo">
-  <div class="cabecalho">
-    <h1>Dashboard</h1>
-    <div class="acoes">
-      <button class="btn btn-primario" onclick="abrirLancamento(null,{tipo:'receita'})">+ Receita</button>
-      <button class="btn btn-escuro" onclick="abrirLancamento(null,{tipo:'despesa'})">+ Despesa</button>
-      <button class="btn" onclick="abrirLancamento(null,{tipo:'despesa',status:'pendente'})">+ Conta a pagar</button>
-    </div>
+
+  <div class="barra-acoes">
+    <button class="btn btn-primario" onclick="abrirLancamento(null,{tipo:'receita'})">+ Receita</button>
+    <button class="btn btn-escuro" onclick="abrirLancamento(null,{tipo:'despesa',status:'pendente'})">Registrar conta</button>
+    <button class="btn" onclick="abrirLancamento(null,{tipo:'despesa'})">+ Despesa</button>
   </div>
 
   <div class="kpis" id="kpis"></div>
 
-  <div class="grade-3" style="margin-bottom:16px">
-    <div class="card">
-      <h2>Fluxo financeiro
-        <select id="periodo" style="width:auto;margin-left:auto;padding:5px 9px;font-size:12px">
+  <section class="dash-grade">
+    <div class="painel">
+      <div class="painel-topo">
+        <div class="painel-titulo" id="titulo-ultimos"></div>
+        <a class="btn-contorno" href="caixa.html">Ver todos</a>
+      </div>
+      <div id="ultimos"></div>
+    </div>
+
+    <div class="painel">
+      <div class="painel-topo">
+        <div class="painel-titulo" id="titulo-fluxo"></div>
+        <select class="select-periodo" id="periodo">
           <option value="6">Últimos 6 meses</option>
           <option value="12">Últimos 12 meses</option>
           <option value="3">Últimos 3 meses</option>
         </select>
-      </h2>
-      <canvas id="gr-fluxo" height="110"></canvas>
+      </div>
+      <div class="fluxo-wrap">
+        <div class="fluxo-grafico">
+          <div class="legenda">
+            <span class="leg leg-verde">Entradas (R$)</span>
+            <span class="leg leg-vermelho">Saídas (R$)</span>
+          </div>
+          <div class="caixa-grafico"><canvas id="gr-fluxo"></canvas></div>
+        </div>
+        <div class="fluxo-totais">
+          <div class="total-box"><div class="total-rotulo">Total de entradas</div><div class="total-valor" id="total-entradas">R$ 0,00</div></div>
+          <div class="total-box"><div class="total-rotulo">Total de saídas</div><div class="total-valor" id="total-saidas">R$ 0,00</div></div>
+        </div>
+      </div>
     </div>
-    <div class="card">
-      <h2>Despesas do mês por categoria</h2>
-      <div id="categorias-mes"></div>
-    </div>
-  </div>
+  </section>
 
-  <div class="grade-2">
-    <div class="card">
-      <h2>Próximos vencimentos <a class="btn-link" href="pagar.html">Ver contas a pagar</a></h2>
+  <section class="dash-grade">
+    <div class="painel">
+      <div class="painel-topo">
+        <div class="painel-titulo" id="titulo-vencimentos"></div>
+        <a class="btn-contorno" href="pagar.html">Ver todos</a>
+      </div>
       <div id="vencimentos"></div>
     </div>
-    <div class="card">
-      <h2>Últimos lançamentos <a class="btn-link" href="caixa.html">Ver caixa</a></h2>
-      <div id="ultimos"></div>
+
+    <div class="painel">
+      <div class="painel-topo">
+        <div class="painel-titulo" id="titulo-alertas"></div>
+      </div>
+      <div class="alertas" id="alertas"></div>
     </div>
-  </div>
+  </section>
 
 </main>
 <div id="aviso" hidden></div>

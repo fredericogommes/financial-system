@@ -19,16 +19,11 @@ async function recarregar() {
   const saidas = data.filter((m) => m.direcao === -1).reduce((t, m) => t + Number(m.valor), 0);
   const { data: r } = await db.from("v_resumo_financeiro").select("saldo_atual").single();
 
-  $("kpis").innerHTML = `
-    <div class="kpi"><div class="bolha b-azul">R$</div><div>
-      <div class="rotulo">Saldo atual</div><div class="valor">${brl(r?.saldo_atual)}</div>
-      <div class="fino muted">saldo inicial das contas + tudo que já entrou e saiu</div></div></div>
-    <div class="kpi"><div class="bolha b-verde">&#8599;</div><div>
-      <div class="rotulo">Entradas no período</div><div class="valor">${brl(entradas)}</div></div></div>
-    <div class="kpi"><div class="bolha b-vermelho">&#8600;</div><div>
-      <div class="rotulo">Saídas no período</div><div class="valor">${brl(saidas)}</div></div></div>
-    <div class="kpi"><div class="bolha ${entradas - saidas >= 0 ? "b-verde" : "b-amarelo"}">&#8721;</div><div>
-      <div class="rotulo">Resultado</div><div class="valor">${brl(entradas - saidas)}</div></div></div>`;
+  $("kpis").innerHTML =
+    kpi("Saldo atual", brl(r?.saldo_atual), "azul", "saldo", "saldo inicial das contas + tudo que já entrou e saiu") +
+    kpi("Entradas no período", brl(entradas), "verde", "receber") +
+    kpi("Saídas no período", brl(saidas), "vermelho", "pagar") +
+    kpi("Resultado", brl(entradas - saidas), entradas - saidas >= 0 ? "verde" : "amarelo", "resultado");
 
   $("tabela").innerHTML = data.length
     ? `<table><thead><tr>

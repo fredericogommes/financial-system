@@ -32,7 +32,7 @@ function editarConta(c) {
   $("c-id").value = c?.id ?? "";
   $("c-nome").value = c?.nome ?? "";
   $("c-tipo").value = c?.tipo ?? "conta_corrente";
-  $("c-saldo").value = c ? String(c.saldo_inicial).replace(".", ",") : "";
+  $("c-saldo").value = c ? valorParaCampo(c.saldo_inicial) : "";
   $("c-inst").value = c?.instituicao ?? "";
   $("modal-conta").hidden = false;
 }
@@ -47,6 +47,7 @@ function editarCategoria(c) {
 
 iniciarPagina("configuracoes", async () => {
   $("nova-conta").onclick = () => editarConta(null);
+  mascaraMoeda($("c-saldo"));
   $("nova-categoria").onclick = () => editarCategoria(null);
 
   $("form-conta").onsubmit = async (e) => {

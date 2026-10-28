@@ -21,17 +21,11 @@ function montarLista(config) {
     const abertos  = data.filter((m) => m.status === "pendente");
     const vencidos = abertos.filter((m) => m.vencimento && m.vencimento < hoje());
     const soma = (l) => l.reduce((t, m) => t + Number(m.valor), 0);
-    const cor = direcao === 1 ? "b-verde" : "b-vermelho";
-    $("kpis").innerHTML = `
-      <div class="kpi"><div class="bolha ${cor}">&#8721;</div><div>
-        <div class="rotulo">Total em aberto</div><div class="valor">${brl(soma(abertos))}</div>
-        <div class="fino muted">${abertos.length} lançamento(s)</div></div></div>
-      <div class="kpi"><div class="bolha b-amarelo">!</div><div>
-        <div class="rotulo">Vencidos</div><div class="valor">${brl(soma(vencidos))}</div>
-        <div class="fino muted">${vencidos.length} lançamento(s)</div></div></div>
-      <div class="kpi"><div class="bolha b-azul">&#9737;</div><div>
-        <div class="rotulo">Na listagem</div><div class="valor">${brl(soma(data))}</div>
-        <div class="fino muted">${data.length} lançamento(s)</div></div></div>`;
+    $("kpis").innerHTML =
+      kpi("Total em aberto", brl(soma(abertos)), direcao === 1 ? "verde" : "vermelho", direcao === 1 ? "receber" : "pagar",
+          `${abertos.length} lançamento(s)`) +
+      kpi("Vencidos", brl(soma(vencidos)), "amarelo", "alerta", `${vencidos.length} lançamento(s)`) +
+      kpi("Na listagem", brl(soma(data)), "azul", "lista", `${data.length} lançamento(s)`);
 
     $("tabela").innerHTML = data.length
       ? `<table><thead><tr>

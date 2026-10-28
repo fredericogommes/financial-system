@@ -22,7 +22,7 @@ Sistema de finanças **pessoais** com painel web, no mesmo padrão visual do pai
 
 | Tabela / view | Para quê |
 | --- | --- |
-| `pessoas` | Nome, apelido, CPF, telefone, e-mail, chave Pix, observações |
+| `pessoas` | Nome, apelido, telefone, chave Pix e observações (o banco ainda guarda CPF e e-mail antigos, mas o painel não pede mais) |
 | `contas` | Contas, carteiras e cartões, com saldo inicial |
 | `categorias` | Categorias de receita e de despesa, com cor |
 | `movimentacoes` | Cada lançamento: tipo, valor, data, vencimento, categoria, conta, situação, origem |
