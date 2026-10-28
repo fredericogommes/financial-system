@@ -81,12 +81,16 @@ function avisar(texto, erro = false) {
 const TIPOS = {
   receita:           { rotulo: "Receita",            direcao:  1, pessoa: false },
   despesa:           { rotulo: "Despesa",            direcao: -1, pessoa: false },
-  recebi:            { rotulo: "Recebi de alguém",   direcao:  1, pessoa: true },
+  recebi:            { rotulo: "Recebi de alguém",   direcao:  1, pessoa: true, status: "liquidado" },
+  // Só existe no formulário: no banco é um "recebi" em aberto
+  a_receber:         { rotulo: "A receber de alguém", direcao: 1, pessoa: true, status: "pendente", banco: "recebi" },
   paguei:            { rotulo: "Paguei alguém",      direcao: -1, pessoa: true },
-  emprestei:         { rotulo: "Emprestei",          direcao: -1, pessoa: true },
+  emprestei:         { rotulo: "Emprestei",          direcao: -1, pessoa: true, status: "liquidado" },
   peguei_emprestado: { rotulo: "Peguei emprestado",  direcao:  1, pessoa: true },
 };
 const rotuloTipo = (t) => (TIPOS[t] ? TIPOS[t].rotulo : t);
+const tipoDoForm = (m) => (m.tipo === "recebi" && m.status === "pendente" ? "a_receber" : m.tipo);
+const rotuloMov = (m) => rotuloTipo(tipoDoForm(m));
 const entra = (t) => TIPOS[t] && TIPOS[t].direcao === 1;
 
 /* ---------------- Layout ---------------- */
@@ -211,7 +215,7 @@ function aplicarTipo() {
   const natureza = entra(t) ? "receita" : "despesa";
   $("campo-pessoa").style.display = TIPOS[t].pessoa ? "" : "none";
   // Empréstimo já saiu do caixa; a data de devolução vira o vencimento da conta a receber
-  $("campo-status").style.display = t === "emprestei" ? "none" : "";
+  $("campo-status").style.display = TIPOS[t].status ? "none" : "";
   $("rotulo-venc").textContent = t === "emprestei" ? "Devolve até" : "Vencimento";
   const cats = Aux.categorias.filter((c) => c.natureza === natureza);
   const atual = $("x-categoria").value;
@@ -231,7 +235,7 @@ async function abrirLancamento(mov, padrao = {}) {
     Aux.pessoas.map((p) => `<option value="${p.id}">${esc(p.nome)}</option>`).join("");
 
   $("x-id").value = mov?.id ?? "";
-  $("x-tipo").value = mov?.tipo ?? padrao.tipo ?? "despesa";
+  $("x-tipo").value = mov ? tipoDoForm(mov) : padrao.tipo ?? "despesa";
   aplicarTipo();
   $("x-valor").value = mov ? valorParaCampo(mov.valor) : "";
   $("x-status").value = mov?.status ?? padrao.status ?? "liquidado";
@@ -249,10 +253,11 @@ async function salvarLancamento(e) {
   e.preventDefault();
   const valor = lerValor($("x-valor").value);
   if (!valor) return avisar("Valor inválido.", true);
-  const tipo = $("x-tipo").value;
-  const pessoa_id = TIPOS[tipo].pessoa ? Number($("x-pessoa").value) || null : null;
-  if (TIPOS[tipo].pessoa && !pessoa_id) return avisar("Escolha a pessoa desse lançamento.", true);
-  const status = tipo === "emprestei" ? "liquidado" : $("x-status").value;
+  const escolhido = $("x-tipo").value;
+  const tipo = TIPOS[escolhido].banco ?? escolhido;
+  const pessoa_id = TIPOS[escolhido].pessoa ? Number($("x-pessoa").value) || null : null;
+  if (TIPOS[escolhido].pessoa && !pessoa_id) return avisar("Escolha a pessoa desse lançamento.", true);
+  const status = TIPOS[escolhido].status ?? $("x-status").value;
   const dados = {
     tipo, valor, pessoa_id, status,
     data: $("x-data").value,

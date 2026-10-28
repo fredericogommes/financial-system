@@ -21,7 +21,7 @@ function situacao(m) {
 }
 
 const nomeLancamento = (m) =>
-  `${esc(m.descricao || rotuloTipo(m.tipo))}${m.pessoa_nome ? `<div class="fino muted">${esc(m.pessoa_nome)}</div>` : ""}`;
+  `${esc(m.descricao || rotuloMov(m))}${m.pessoa_nome ? `<div class="fino muted">${esc(m.pessoa_nome)}</div>` : ""}`;
 
 function renderGrafico(meses, entradas, saidas) {
   if (grFluxo) grFluxo.destroy();
