@@ -1,5 +1,15 @@
 /* Finanças do Fred — camada comum: layout, login, helpers e modal de lançamento.
    A chave publicável pode ficar no navegador: os dados só aparecem para quem fizer login (RLS). */
+/* Se algo quebrar ao carregar, mostra o erro na tela em vez de deixar a página em branco */
+function mostrarFalha(msg) {
+  const el = document.createElement("div");
+  el.style.cssText = "position:fixed;inset:auto 16px 16px 16px;z-index:99;background:#e74c3c;color:#fff;padding:12px 14px;border-radius:10px;font:14px system-ui";
+  el.textContent = "O painel não carregou: " + msg + ". Tire um print desta mensagem e mande para o Claude.";
+  (document.body || document.documentElement).appendChild(el);
+}
+window.addEventListener("error", (e) => mostrarFalha(e.message || "erro ao carregar " + (e.target?.src || "um arquivo")), true);
+window.addEventListener("unhandledrejection", (e) => mostrarFalha(e.reason?.message || String(e.reason)));
+
 const SUPABASE_URL = "https://nbwozmphkejikpkmfaqh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vs5xBJpySadmlwsdcupLIg_SQsfQ0Fz";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
