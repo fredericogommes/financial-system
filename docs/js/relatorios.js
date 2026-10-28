@@ -81,9 +81,9 @@ async function recarregar() {
     ? `<table><thead><tr><th>Mês</th><th class="num">Entradas</th><th class="num">Saídas</th><th class="num">Resultado</th></tr></thead>
        <tbody>${dadosAno.map((f) => `<tr>
           <td>${nomeMes(String(f.mes).slice(0, 7))}</td>
-          <td class="num pos">${brl(f.entradas)}</td>
-          <td class="num neg">${brl(f.saidas)}</td>
-          <td class="num ${Number(f.resultado) >= 0 ? "pos" : "neg"}">${brl(f.resultado)}</td>
+          <td class="num ${f.entradas ? "pos" : "muted"}">${brl(f.entradas)}</td>
+          <td class="num ${f.saidas ? "neg" : "muted"}">${brl(f.saidas)}</td>
+          <td class="num ${f.resultado > 0 ? "pos" : f.resultado < 0 ? "neg" : "muted"}">${brl(f.resultado)}</td>
         </tr>`).join("")}
         <tr><td><strong>Total</strong></td><td class="num pos"><strong>${brl(entradas)}</strong></td>
         <td class="num neg"><strong>${brl(saidas)}</strong></td>

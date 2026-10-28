@@ -31,7 +31,7 @@ async function recarregar() {
         <th class="num">Valor</th><th class="num">Ações</th></tr></thead>
        <tbody>${data.map((m) => `<tr>
           <td>${dataBR(m.data_caixa)}</td>
-          <td>${esc(m.descricao || rotuloTipo(m.tipo))}<div class="fino muted">${rotuloTipo(m.tipo)}${m.origem === "telegram" ? " · Telegram" : ""}</div></td>
+          <td>${esc(m.descricao || rotuloMov(m))}<div class="fino muted">${m.descricao ? rotuloMov(m) : ""}${m.origem === "telegram" ? (m.descricao ? " · " : "") + "Telegram" : ""}</div></td>
           <td>${m.categoria_nome ? `<span class="ponto" style="background:${esc(m.categoria_cor)}"></span>${esc(m.categoria_nome)}` : '<span class="muted">—</span>'}</td>
           <td class="fino">${esc(m.conta_nome || "—")}</td>
           <td class="fino">${esc(m.pessoa_nome || "—")}</td>
