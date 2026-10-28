@@ -65,10 +65,10 @@ async function abrirPessoa(id, silencioso) {
     ${(movs || []).length
       ? `<table><tbody>${movs.map((m) => `<tr>
           <td class="fino">${dataBR(m.data)}</td>
-          <td>${rotuloTipo(m.tipo)}${m.descricao ? ` <span class="muted fino">— ${esc(m.descricao)}</span>` : ""}
-              ${m.status === "pendente" ? '<span class="tag t-amarelo">em aberto</span>' : ""}</td>
-          <td class="num ${m.direcao === 1 ? "pos" : "neg"}">${brl(m.valor)}</td>
-          <td class="num"><button class="btn-link" style="color:var(--vermelho)" onclick="excluirLancamento(${m.id})">Excluir</button></td>
+          <td>${m.status === "pendente" && m.tipo === "recebi" ? "A receber" : rotuloTipo(m.tipo)}${m.descricao ? ` <span class="muted fino">— ${esc(m.descricao)}</span>` : ""}
+              ${m.status === "pendente" ? `<span class="tag t-amarelo">em aberto${m.vencimento ? " · vence " + dataBR(m.vencimento) : ""}</span>` : ""}</td>
+          <td class="num ${m.status === "pendente" ? "muted" : m.direcao === 1 ? "pos" : "neg"}">${brl(m.valor)}</td>
+          <td class="num">${m.status === "pendente" ? `<button class="btn-link" onclick="liquidar(${m.id})">Dar baixa</button> ` : ""}<button class="btn-link" style="color:var(--vermelho)" onclick="excluirLancamento(${m.id})">Excluir</button></td>
         </tr>`).join("")}</tbody></table>`
       : `<div class="vazio">Sem movimentações ainda.</div>`}`;
   if (!silencioso) $("ficha").scrollIntoView({ behavior: "smooth", block: "nearest" });

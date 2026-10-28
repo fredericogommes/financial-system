@@ -187,7 +187,7 @@ async function extrato(chatId: number, termo: string) {
   }
   const p = pessoas[0];
   const { data } = await db.from("movimentacoes").select("tipo, valor, data, descricao")
-    .eq("pessoa_id", p.id).order("data", { ascending: false }).order("id", { ascending: false }).limit(10);
+    .eq("pessoa_id", p.id).eq("status", "liquidado").order("data", { ascending: false }).order("id", { ascending: false }).limit(10);
   const s = await saldoDe(p.id);
   const linhas = (data ?? []).map((m) =>
     `${dataBR(m.data)} ${ROTULO[m.tipo as Tipo]} ${brl(Number(m.valor))}${m.descricao ? ` — ${m.descricao}` : ""}`);

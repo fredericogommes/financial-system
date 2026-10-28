@@ -184,10 +184,10 @@ function modalLancamento() {
       <div class="form-grade">
         <div><label for="x-tipo">Tipo</label><select id="x-tipo"></select></div>
         <div><label for="x-valor">Valor (R$)</label><input id="x-valor" required></div>
-        <div><label for="x-status">Situação</label>
+        <div id="campo-status"><label for="x-status">Situação</label>
           <select id="x-status"><option value="liquidado">Já aconteceu</option><option value="pendente">Em aberto</option></select></div>
         <div><label for="x-data">Data</label><input id="x-data" type="date" required></div>
-        <div><label for="x-venc">Vencimento</label><input id="x-venc" type="date"></div>
+        <div><label for="x-venc" id="rotulo-venc">Vencimento</label><input id="x-venc" type="date"></div>
         <div><label for="x-categoria">Categoria</label><select id="x-categoria"></select></div>
         <div><label for="x-conta">Conta</label><select id="x-conta"></select></div>
         <div id="campo-pessoa"><label for="x-pessoa">Pessoa</label><select id="x-pessoa"></select></div>
@@ -210,6 +210,9 @@ function aplicarTipo() {
   const t = $("x-tipo").value;
   const natureza = entra(t) ? "receita" : "despesa";
   $("campo-pessoa").style.display = TIPOS[t].pessoa ? "" : "none";
+  // Empréstimo já saiu do caixa; a data de devolução vira o vencimento da conta a receber
+  $("campo-status").style.display = t === "emprestei" ? "none" : "";
+  $("rotulo-venc").textContent = t === "emprestei" ? "Devolve até" : "Vencimento";
   const cats = Aux.categorias.filter((c) => c.natureza === natureza);
   const atual = $("x-categoria").value;
   $("x-categoria").innerHTML = `<option value="">Sem categoria</option>` +
@@ -249,7 +252,7 @@ async function salvarLancamento(e) {
   const tipo = $("x-tipo").value;
   const pessoa_id = TIPOS[tipo].pessoa ? Number($("x-pessoa").value) || null : null;
   if (TIPOS[tipo].pessoa && !pessoa_id) return avisar("Escolha a pessoa desse lançamento.", true);
-  const status = $("x-status").value;
+  const status = tipo === "emprestei" ? "liquidado" : $("x-status").value;
   const dados = {
     tipo, valor, pessoa_id, status,
     data: $("x-data").value,
@@ -270,11 +273,34 @@ async function salvarLancamento(e) {
 }
 
 async function liquidar(id) {
-  const { error } = await db.from("movimentacoes")
-    .update({ status: "liquidado", liquidado_em: hoje(), data: hoje() }).eq("id", id);
+  const { data: m, error: e1 } = await db.from("movimentacoes").select("*").eq("id", id).single();
+  if (e1) return avisar("Erro: " + e1.message, true);
+  let recebido = Number(m.valor);
+  // Conta a receber de uma pessoa: aceita pagamento parcial e deixa o resto em aberto
+  if (m.tipo === "recebi" && m.pessoa_id) {
+    const r = prompt(`Quanto foi recebido? Em aberto: ${brl(m.valor)}`, valorParaCampo(m.valor));
+    if (r === null) return;
+    recebido = lerValor(r);
+    if (!recebido) return avisar("Valor inválido.", true);
+  }
+  const { error } = recebido < Number(m.valor)
+    ? await parcial(m, recebido)
+    : await db.from("movimentacoes")
+        .update({ status: "liquidado", liquidado_em: hoje(), data: hoje(), valor: recebido }).eq("id", id);
   if (error) return avisar("Erro: " + error.message, true);
   avisar("Baixa registrada.");
   if (typeof recarregar === "function") recarregar();
+}
+
+async function parcial(m, recebido) {
+  const { error } = await db.from("movimentacoes")
+    .update({ valor: Math.round((m.valor - recebido) * 100) / 100 }).eq("id", m.id);
+  if (error) return { error };
+  return db.from("movimentacoes").insert({
+    tipo: m.tipo, pessoa_id: m.pessoa_id, valor: recebido, data: hoje(), liquidado_em: hoje(),
+    status: "liquidado", descricao: m.descricao, conta_id: m.conta_id, categoria_id: m.categoria_id,
+    referente_a: m.referente_a ?? m.id,
+  });
 }
 
 async function excluirLancamento(id) {
