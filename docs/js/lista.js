@@ -34,11 +34,11 @@ function montarLista(config) {
         </tr></thead><tbody>${data.map((m) => {
           const atrasado = m.status === "pendente" && m.vencimento && m.vencimento < hoje();
           const tag = m.status === "liquidado"
-            ? '<span class="tag t-verde">Baixado</span>'
+            ? `<span class="tag t-verde">Baixado em ${dataBR(m.data_caixa)}</span>`
             : atrasado ? '<span class="tag t-vermelho">Vencido</span>' : '<span class="tag t-amarelo">Em aberto</span>';
           return `<tr>
             <td>${dataBR(m.vencimento || m.data)}</td>
-            <td>${esc(m.descricao || rotuloTipo(m.tipo))}<div class="fino muted">${rotuloTipo(m.tipo)}${m.origem === "telegram" ? " · Telegram" : ""}</div></td>
+            <td>${esc(m.descricao || rotuloMov(m))}<div class="fino muted">${rotuloMov(m)}${m.origem === "telegram" ? " · Telegram" : ""}</div></td>
             <td>${m.categoria_nome ? `<span class="ponto" style="background:${esc(m.categoria_cor)}"></span>${esc(m.categoria_nome)}` : '<span class="muted">—</span>'}</td>
             <td>${esc(m.pessoa_nome || "—")}</td>
             <td>${tag}</td>

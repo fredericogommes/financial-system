@@ -21,7 +21,7 @@ function situacao(m) {
 }
 
 const nomeLancamento = (m) =>
-  `${esc(m.descricao || rotuloTipo(m.tipo))}${m.pessoa_nome ? `<div class="fino muted">${esc(m.pessoa_nome)}</div>` : ""}`;
+  `${esc(m.descricao || rotuloMov(m))}${m.pessoa_nome ? `<div class="fino muted">${esc(m.pessoa_nome)}</div>` : ""}`;
 
 function renderGrafico(meses, entradas, saidas) {
   if (grFluxo) grFluxo.destroy();
@@ -58,7 +58,7 @@ async function recarregar() {
     db.from("v_movimentacoes").select("*").eq("status", "pendente")
       .order("vencimento", { ascending: true, nullsFirst: false }).limit(5),
     db.from("v_movimentacoes").select("*").eq("status", "liquidado")
-      .order("data", { ascending: false }).order("id", { ascending: false }).limit(5),
+      .order("data_caixa", { ascending: false }).order("id", { ascending: false }).limit(5),
     db.from("saldo_por_pessoa").select("saldo").neq("saldo", 0),
   ]);
 
@@ -84,7 +84,7 @@ async function recarregar() {
   $("ultimos").innerHTML = (ult || []).length
     ? `<table class="tabela-dash"><thead><tr><th>Data</th><th>Lançamento</th><th>Categoria</th><th class="num">Valor</th></tr></thead>
        <tbody>${ult.map((m) => `<tr>
-          <td>${dataBR(m.data)}</td>
+          <td>${dataBR(m.data_caixa)}</td>
           <td>${nomeLancamento(m)}</td>
           <td>${m.categoria_nome ? `<span class="ponto" style="background:${esc(m.categoria_cor)}"></span>${esc(m.categoria_nome)}` : '<span class="muted">—</span>'}</td>
           <td class="num ${m.direcao === 1 ? "pos" : "neg"}">${m.direcao === 1 ? "+" : "−"} ${brl(m.valor)}</td>

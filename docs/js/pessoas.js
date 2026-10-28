@@ -1,10 +1,10 @@
-/* Pessoas — quem te deve, para quem você deve */
+/* Pessoas — débitos de cada pessoa e o que você tem a pagar */
 let pessoaAtual = null;
 
 function textoSaldo(s) {
   s = Number(s);
-  if (s > 0) return `<span class="pos">Te deve ${brl(s)}</span>`;
-  if (s < 0) return `<span class="neg">Você deve ${brl(-s)}</span>`;
+  if (s > 0) return `<span class="pos">Débito de ${brl(s)}</span>`;
+  if (s < 0) return `<span class="neg">A pagar ${brl(-s)}</span>`;
   return `<span class="muted">Quite</span>`;
 }
 
@@ -27,8 +27,8 @@ async function recarregar() {
 
   const total = (f) => saldos.filter(f).reduce((t, s) => t + Math.abs(Number(s.saldo)), 0);
   $("kpis").innerHTML =
-    kpi("Total que te devem", brl(total((s) => s.saldo > 0)), "verde", "receber") +
-    kpi("Total que você deve", brl(total((s) => s.saldo < 0)), "vermelho", "pagar") +
+    kpi("Saldo a receber", brl(total((s) => s.saldo > 0)), "verde", "receber") +
+    kpi("Total de débitos", brl(total((s) => s.saldo < 0)), "vermelho", "pagar") +
     kpi("Pessoas cadastradas", saldos.length, "azul", "pessoas");
 
   $("lista").innerHTML = lista.length
@@ -53,7 +53,8 @@ async function abrirPessoa(id, silencioso) {
   const info = [p.apelido, p.telefone, p.chave_pix && "Pix " + p.chave_pix]
     .filter(Boolean).join(" · ");
   $("ficha").innerHTML = `
-    <h2>${esc(p.nome)} <button class="btn-link" onclick="formPessoa(pessoaAtual)">Editar</button></h2>
+    <h2>${esc(p.nome)} <button class="btn-link" onclick="formPessoa(pessoaAtual)">Editar</button>
+      <button class="btn-link" style="color:var(--vermelho)" onclick="excluirPessoa()">Excluir pessoa</button></h2>
     <p class="fino muted" style="margin:-6px 0 10px">${esc(info) || "Sem dados de contato."}</p>
     <p style="font-size:17px;margin:0 0 14px">${textoSaldo(s?.saldo ?? 0)}</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
@@ -65,13 +66,36 @@ async function abrirPessoa(id, silencioso) {
     ${(movs || []).length
       ? `<table><tbody>${movs.map((m) => `<tr>
           <td class="fino">${dataBR(m.data)}</td>
-          <td>${rotuloTipo(m.tipo)}${m.descricao ? ` <span class="muted fino">— ${esc(m.descricao)}</span>` : ""}
-              ${m.status === "pendente" ? '<span class="tag t-amarelo">em aberto</span>' : ""}</td>
-          <td class="num ${m.direcao === 1 ? "pos" : "neg"}">${brl(m.valor)}</td>
-          <td class="num"><button class="btn-link" style="color:var(--vermelho)" onclick="excluirLancamento(${m.id})">Excluir</button></td>
+          <td>${rotuloMov(m)}${m.descricao ? ` <span class="muted fino">— ${esc(m.descricao)}</span>` : ""}
+              ${m.status === "pendente" ? `<span class="tag t-amarelo">em aberto${m.vencimento ? " · vence " + dataBR(m.vencimento) : ""}</span>` : ""}</td>
+          <td class="num ${m.status === "pendente" ? "muted" : m.direcao === 1 ? "pos" : "neg"}">${brl(m.valor)}</td>
+          <td class="num" style="white-space:nowrap">${m.status === "pendente" ? `<button class="btn-link" onclick="liquidar(${m.id})">Dar baixa</button> · ` : ""}<button class="btn-link" style="color:var(--vermelho)" onclick="excluirLancamento(${m.id})">Excluir</button></td>
         </tr>`).join("")}</tbody></table>`
       : `<div class="vazio">Sem movimentações ainda.</div>`}`;
   if (!silencioso) $("ficha").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function excluirPessoa() {
+  const p = pessoaAtual;
+  const { count } = await db.from("movimentacoes").select("id", { count: "exact", head: true }).eq("pessoa_id", p.id);
+  const aviso = count
+    ? `Excluir ${p.nome} e os ${count} lançamento(s) ligados a ela? Isso não pode ser desfeito.`
+    : `Excluir ${p.nome}?`;
+  if (!confirm(aviso)) return;
+  if (count) {
+    // Primeiro as contas a receber em aberto, depois o resto (empréstimos e baixas)
+    const { error: e1 } = await db.from("movimentacoes").delete()
+      .eq("pessoa_id", p.id).eq("tipo", "recebi").eq("status", "pendente");
+    if (e1) return avisar("Erro ao excluir os lançamentos: " + e1.message, true);
+    const { error } = await db.from("movimentacoes").delete().eq("pessoa_id", p.id);
+    if (error) return avisar("Erro ao excluir os lançamentos: " + error.message, true);
+  }
+  const { error } = await db.from("pessoas").delete().eq("id", p.id);
+  if (error) return avisar("Erro ao excluir: " + error.message, true);
+  pessoaAtual = null;
+  $("ficha").innerHTML = `<h2>Ficha</h2><p class="muted fino">Escolha alguém na lista ao lado.</p>`;
+  avisar(`${p.nome} foi excluída.`);
+  recarregar();
 }
 
 function formPessoa(p) {
