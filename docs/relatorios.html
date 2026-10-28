@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Relatórios · Finanças do Fred</title>
-<link rel="stylesheet" href="css/style.css?v=20261028c">
+<link rel="stylesheet" href="css/style.css?v=20261029a">
 </head>
 <body>
 <header class="topbar" id="topbar"></header>
@@ -21,7 +21,7 @@
   <div class="kpis" id="kpis"></div>
 
   <div class="card" style="margin-bottom:16px">
-    <h2>Entradas e saídas por mês</h2>
+    <h2>Receitas, despesas e resultado por mês</h2>
     <div class="caixa-grafico" style="height:280px"><canvas id="gr-ano"></canvas></div>
   </div>
 
@@ -30,16 +30,21 @@
     <div class="card"><h2>Receitas por categoria</h2><div class="caixa-grafico" id="box-receitas" style="height:260px"><canvas id="gr-receitas"></canvas></div><div class="vazio" id="vazio-receitas" hidden>Nenhuma receita neste ano.</div></div>
   </div>
 
-  <div class="card">
+  <div class="card" style="margin-bottom:16px">
     <h2>Resumo mês a mês</h2>
     <div id="tabela-ano"></div>
+  </div>
+
+  <div class="card">
+    <h2>Orçado × realizado <input type="month" id="mes-orc" style="width:auto;margin-left:auto"></h2>
+    <div id="tabela-orcamento"></div>
   </div>
 
 </main>
 <div id="aviso" hidden></div>
 <script src="vendor/supabase.js"></script>
 <script src="vendor/chart.umd.js"></script>
-<script src="js/app.js?v=20261028c"></script>
-<script src="js/relatorios.js?v=20261028c"></script>
+<script src="js/app.js?v=20261029a"></script>
+<script src="js/relatorios.js?v=20261029a"></script>
 </body>
 </html>
