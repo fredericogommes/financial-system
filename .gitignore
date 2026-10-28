@@ -1,0 +1,3 @@
+
+# Cópia dos dados reais usada nos testes locais (não versionar)
+supabase/tests/01_dados_reais.sql
