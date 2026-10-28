@@ -3,15 +3,15 @@ let linhas = [];
 
 async function recarregar() {
   let q = db.from("v_movimentacoes").select("*").eq("status", "liquidado");
-  if ($("f-de").value) q = q.gte("data", $("f-de").value);
-  if ($("f-ate").value) q = q.lte("data", $("f-ate").value);
+  if ($("f-de").value) q = q.gte("data_caixa", $("f-de").value);
+  if ($("f-ate").value) q = q.lte("data_caixa", $("f-ate").value);
   if ($("f-conta").value) q = q.eq("conta_id", Number($("f-conta").value));
   if ($("f-categoria").value) q = q.eq("categoria_id", Number($("f-categoria").value));
   if ($("f-tipo").value) q = q.eq("direcao", Number($("f-tipo").value));
   const busca = $("f-busca").value.replace(/[,()%*]/g, " ").trim(); // caracteres que quebram o filtro .or()
   if (busca) q = q.or(`descricao.ilike.%${busca}%,pessoa_nome.ilike.%${busca}%`);
 
-  const { data, error } = await q.order("data", { ascending: false }).order("id", { ascending: false }).limit(500);
+  const { data, error } = await q.order("data_caixa", { ascending: false }).order("id", { ascending: false }).limit(500);
   if (error) return avisar("Erro: " + error.message, true);
   linhas = data;
 
@@ -30,7 +30,7 @@ async function recarregar() {
         <th>Data</th><th>Lançamento</th><th>Categoria</th><th>Conta</th><th>Pessoa</th>
         <th class="num">Valor</th><th class="num">Ações</th></tr></thead>
        <tbody>${data.map((m) => `<tr>
-          <td>${dataBR(m.data)}</td>
+          <td>${dataBR(m.data_caixa)}</td>
           <td>${esc(m.descricao || rotuloTipo(m.tipo))}<div class="fino muted">${rotuloTipo(m.tipo)}${m.origem === "telegram" ? " · Telegram" : ""}</div></td>
           <td>${m.categoria_nome ? `<span class="ponto" style="background:${esc(m.categoria_cor)}"></span>${esc(m.categoria_nome)}` : '<span class="muted">—</span>'}</td>
           <td class="fino">${esc(m.conta_nome || "—")}</td>
@@ -50,7 +50,7 @@ window.editar = async (id) => {
 
 function exportarCSV() {
   const cab = ["Data", "Tipo", "Descricao", "Categoria", "Conta", "Pessoa", "Valor", "Entrada/Saida"];
-  const linha = (m) => [dataBR(m.data), rotuloTipo(m.tipo), m.descricao || "", m.categoria_nome || "",
+  const linha = (m) => [dataBR(m.data_caixa), rotuloMov(m), m.descricao || "", m.categoria_nome || "",
     m.conta_nome || "", m.pessoa_nome || "", String(m.valor).replace(".", ","), m.direcao === 1 ? "Entrada" : "Saida"];
   const csv = [cab, ...linhas.map(linha)]
     .map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");

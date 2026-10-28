@@ -224,7 +224,9 @@ function aplicarTipo() {
   if (cats.some((c) => String(c.id) === atual)) $("x-categoria").value = atual;
 }
 
+let lancAtual = null;
 async function abrirLancamento(mov, padrao = {}) {
+  lancAtual = mov;
   await carregarAux();
   modalLancamento();
   $("lanc-titulo").textContent = mov ? "Editar lançamento" : "Novo lançamento";
@@ -265,7 +267,7 @@ async function salvarLancamento(e) {
     categoria_id: Number($("x-categoria").value) || null,
     conta_id: Number($("x-conta").value) || null,
     descricao: $("x-desc").value.trim() || null,
-    liquidado_em: status === "liquidado" ? $("x-data").value : null,
+    liquidado_em: status === "liquidado" ? lancAtual?.liquidado_em || $("x-data").value : null,
   };
   const id = $("x-id").value;
   const { error } = id
@@ -277,35 +279,89 @@ async function salvarLancamento(e) {
   if (typeof recarregar === "function") recarregar();
 }
 
-async function liquidar(id) {
-  const { data: m, error: e1 } = await db.from("movimentacoes").select("*").eq("id", id).single();
-  if (e1) return avisar("Erro: " + e1.message, true);
-  let recebido = Number(m.valor);
-  // Conta a receber de uma pessoa: aceita pagamento parcial e deixa o resto em aberto
-  if (m.tipo === "recebi" && m.pessoa_id) {
-    const r = prompt(`Quanto foi recebido? Em aberto: ${brl(m.valor)}`, valorParaCampo(m.valor));
-    if (r === null) return;
-    recebido = lerValor(r);
-    if (!recebido) return avisar("Valor inválido.", true);
-  }
-  const { error } = recebido < Number(m.valor)
-    ? await parcial(m, recebido)
-    : await db.from("movimentacoes")
-        .update({ status: "liquidado", liquidado_em: hoje(), data: hoje(), valor: recebido }).eq("id", id);
-  if (error) return avisar("Erro: " + error.message, true);
-  avisar("Baixa registrada.");
-  if (typeof recarregar === "function") recarregar();
+/* ---------------- Dar baixa (total ou parcial) ---------------- */
+let baixaAtual = null;
+
+function modalBaixa() {
+  if ($("modal-baixa")) return;
+  const el = document.createElement("div");
+  el.id = "modal-baixa";
+  el.className = "modal";
+  el.hidden = true;
+  el.innerHTML = `
+    <form class="caixa" id="form-baixa">
+      <h2>Dar baixa</h2>
+      <p class="fino muted" id="b-info" style="margin:-6px 0 14px"></p>
+      <div class="form-grade">
+        <div><label for="b-valor">Valor pago/recebido (R$)</label><input id="b-valor" required></div>
+        <div><label for="b-data">Data da baixa</label><input id="b-data" type="date" required></div>
+        <div class="col-2"><label for="b-conta">Conta</label><select id="b-conta"></select></div>
+      </div>
+      <p class="fino muted" id="b-resto" style="margin:12px 0 0"></p>
+      <div class="rodape">
+        <button type="button" class="btn" id="b-cancelar">Cancelar</button>
+        <button class="btn btn-primario">Confirmar baixa</button>
+      </div>
+    </form>`;
+  document.body.appendChild(el);
+  $("b-cancelar").onclick = () => (el.hidden = true);
+  el.onclick = (ev) => { if (ev.target === el) el.hidden = true; };
+  mascaraMoeda($("b-valor"));
+  $("b-valor").addEventListener("input", mostrarResto);
+  $("form-baixa").onsubmit = confirmarBaixa;
 }
 
-async function parcial(m, recebido) {
-  const { error } = await db.from("movimentacoes")
-    .update({ valor: Math.round((m.valor - recebido) * 100) / 100 }).eq("id", m.id);
-  if (error) return { error };
-  return db.from("movimentacoes").insert({
-    tipo: m.tipo, pessoa_id: m.pessoa_id, valor: recebido, data: hoje(), liquidado_em: hoje(),
-    status: "liquidado", descricao: m.descricao, conta_id: m.conta_id, categoria_id: m.categoria_id,
-    referente_a: m.referente_a ?? m.id,
-  });
+function mostrarResto() {
+  const v = lerValor($("b-valor").value) || 0;
+  const resto = Math.round((baixaAtual.valor - v) * 100) / 100;
+  $("b-resto").textContent = resto > 0
+    ? `Baixa parcial: ${brl(resto)} continuam em aberto.`
+    : "Baixa total: o lançamento sai da lista de abertos.";
+}
+
+async function liquidar(id) {
+  await carregarAux();
+  const { data: m, error } = await db.from("v_movimentacoes").select("*").eq("id", id).single();
+  if (error) return avisar("Erro: " + error.message, true);
+  baixaAtual = { ...m, valor: Number(m.valor) };
+  modalBaixa();
+  $("b-info").textContent = [rotuloMov(m), m.descricao, m.pessoa_nome,
+    m.vencimento && "vence " + dataBR(m.vencimento), "em aberto " + brl(m.valor)].filter(Boolean).join(" · ");
+  $("b-valor").value = valorParaCampo(m.valor);
+  $("b-data").value = hoje();
+  $("b-conta").innerHTML = `<option value="">Sem conta</option>` +
+    Aux.contas.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
+  $("b-conta").value = m.conta_id ?? (Aux.contas[0]?.id ?? "");
+  mostrarResto();
+  $("modal-baixa").hidden = false;
+  $("b-valor").focus();
+}
+
+async function confirmarBaixa(e) {
+  e.preventDefault();
+  const m = baixaAtual;
+  const valor = lerValor($("b-valor").value);
+  if (!valor) return avisar("Valor inválido.", true);
+  const quando = $("b-data").value;
+  const conta_id = Number($("b-conta").value) || null;
+  const resto = Math.round((m.valor - valor) * 100) / 100;
+  let error;
+  if (resto > 0) {
+    // Parcial: o que foi pago vira um lançamento baixado e o resto continua em aberto
+    ({ error } = await db.from("movimentacoes").insert({
+      tipo: m.tipo, pessoa_id: m.pessoa_id, valor, data: quando, liquidado_em: quando, status: "liquidado",
+      vencimento: m.vencimento, descricao: `${m.descricao || rotuloTipo(m.tipo)} (parcial)`,
+      categoria_id: m.categoria_id, conta_id, referente_a: m.referente_a ?? m.id,
+    }));
+    if (!error) ({ error } = await db.from("movimentacoes").update({ valor: resto }).eq("id", m.id));
+  } else {
+    ({ error } = await db.from("movimentacoes")
+      .update({ status: "liquidado", liquidado_em: quando, valor, conta_id }).eq("id", m.id));
+  }
+  if (error) return avisar("Erro: " + error.message, true);
+  $("modal-baixa").hidden = true;
+  avisar(resto > 0 ? `Baixa parcial registrada. Restam ${brl(resto)} em aberto.` : "Baixa registrada.");
+  if (typeof recarregar === "function") recarregar();
 }
 
 async function excluirLancamento(id) {

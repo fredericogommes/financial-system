@@ -34,7 +34,7 @@ function montarLista(config) {
         </tr></thead><tbody>${data.map((m) => {
           const atrasado = m.status === "pendente" && m.vencimento && m.vencimento < hoje();
           const tag = m.status === "liquidado"
-            ? '<span class="tag t-verde">Baixado</span>'
+            ? `<span class="tag t-verde">Baixado em ${dataBR(m.data_caixa)}</span>`
             : atrasado ? '<span class="tag t-vermelho">Vencido</span>' : '<span class="tag t-amarelo">Em aberto</span>';
           return `<tr>
             <td>${dataBR(m.vencimento || m.data)}</td>
