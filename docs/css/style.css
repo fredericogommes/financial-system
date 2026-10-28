@@ -69,6 +69,9 @@ button,input,select,textarea{font:inherit}
   box-shadow:var(--sombra);padding:16px}
 .card h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
 .card h2 .btn-link{margin-left:auto;font-size:12px}
+.card h2 .btn-link + .btn-link{margin-left:12px}
+.extrato td{vertical-align:middle}
+.extrato .tag{margin-left:6px;white-space:nowrap}
 
 /* KPIs no mesmo padrão do painel Tech4You: ícone em quadrado preto, valor grande */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-bottom:20px}
@@ -79,11 +82,12 @@ button,input,select,textarea{font:inherit}
 .k-verde{color:var(--verde)} .k-vermelho{color:var(--vermelho)}
 .k-amarelo{color:var(--amarelo)} .k-azul{color:#60a5fa}
 .kpi-rotulo{color:var(--texto-2);font-size:14px;margin-bottom:2px}
-.kpi-valor{font-size:26px;font-weight:700;letter-spacing:-.5px;white-space:nowrap}
+.kpi > div:last-child{min-width:0}
+.kpi-valor{font-size:clamp(18px,1.55vw,26px);font-weight:700;letter-spacing:-.5px;white-space:nowrap}
 .kpi-nota{font-size:12.5px;margin-top:4px;color:var(--texto-2)}
 
 .grade-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.grade-3{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.grade-3{display:grid;grid-template-columns:3fr 2fr;gap:16px}
 @media(max-width:1000px){.grade-2,.grade-3{grid-template-columns:1fr}}
 
 /* ---------- Tabelas ---------- */

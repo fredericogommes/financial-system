@@ -38,7 +38,7 @@ function montarLista(config) {
             : atrasado ? '<span class="tag t-vermelho">Vencido</span>' : '<span class="tag t-amarelo">Em aberto</span>';
           return `<tr>
             <td>${dataBR(m.vencimento || m.data)}</td>
-            <td>${esc(m.descricao || rotuloMov(m))}<div class="fino muted">${rotuloMov(m)}${m.origem === "telegram" ? " · Telegram" : ""}</div></td>
+            <td>${esc(m.descricao || rotuloMov(m))}<div class="fino muted">${m.descricao ? rotuloMov(m) : ""}${m.origem === "telegram" ? (m.descricao ? " · " : "") + "Telegram" : ""}</div></td>
             <td>${m.categoria_nome ? `<span class="ponto" style="background:${esc(m.categoria_cor)}"></span>${esc(m.categoria_nome)}` : '<span class="muted">—</span>'}</td>
             <td>${esc(m.pessoa_nome || "—")}</td>
             <td>${tag}</td>
