@@ -1,4 +1,4 @@
-// Testes das regras de planejamento: node --test tests/
+// Testes das regras de planejamento: node --test tests/*.test.js
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const P = require("../docs/js/planejamento.js");
