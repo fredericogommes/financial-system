@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orçamento · Finanças do Fred</title>
+<link rel="stylesheet" href="css/style.css?v=20261105a">
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<nav class="sidebar" id="sidebar"></nav>
+<main class="conteudo">
+  <div class="cabecalho">
+    <h1>Orçamento</h1>
+    <div class="acoes"><input type="month" id="mes" style="width:auto"></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="card" style="margin-bottom:16px">
+    <h2>Para onde vai o dinheiro</h2>
+    <div id="divisao"></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <h2>Fixas, parceladas e variáveis nos últimos 12 meses</h2>
+    <div class="caixa-grafico" style="height:260px"><canvas id="gr-serie"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>Contas do mês</h2>
+    <div id="itens" style="overflow-x:auto"></div>
+    <p class="legenda-regra">Como a classe é escolhida: a sua correção vale primeiro. Depois, conta com parcela (1/10) é parcelada. É fixa a que aparece em pelo menos 3 meses (ou nos 2, se só houver 2 meses de dados), no máximo 2 vezes por mês e com valor parecido (variação de até 30%, ou 5% com só 2 meses). O resto é variável. Empréstimos não entram.</p>
+  </div>
+</main>
+<div id="aviso" hidden></div>
+<script src="vendor/supabase.js"></script>
+<script src="vendor/chart.umd.js"></script>
+<script src="js/app.js?v=20261105a"></script>
+<script src="js/planejamento.js?v=20261105a"></script>
+<script src="js/orcamento.js?v=20261105a"></script>
+</body>
+</html>

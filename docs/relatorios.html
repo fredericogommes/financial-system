@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Relatórios · Finanças do Fred</title>
-<link rel="stylesheet" href="css/style.css?v=20261029a">
+<link rel="stylesheet" href="css/style.css?v=20261105a">
 </head>
 <body>
 <header class="topbar" id="topbar"></header>
@@ -35,6 +35,15 @@
     <div id="tabela-ano"></div>
   </div>
 
+  <div class="card" style="margin-bottom:16px">
+    <h2>Comparar dois meses
+      <span style="margin-left:auto;display:flex;gap:8px;align-items:center;font-weight:400">
+        <input type="month" id="cmp-a" style="width:auto"><span class="fino muted">com</span><input type="month" id="cmp-b" style="width:auto">
+        <select id="cmp-nat" style="width:auto"><option value="despesa">Despesas</option><option value="receita">Receitas</option></select>
+      </span></h2>
+    <div id="tabela-comparacao" style="overflow-x:auto"></div>
+  </div>
+
   <div class="card">
     <h2>Orçado × realizado <input type="month" id="mes-orc" style="width:auto;margin-left:auto"></h2>
     <div id="tabela-orcamento"></div>
@@ -44,7 +53,7 @@
 <div id="aviso" hidden></div>
 <script src="vendor/supabase.js"></script>
 <script src="vendor/chart.umd.js"></script>
-<script src="js/app.js?v=20261029a"></script>
-<script src="js/relatorios.js?v=20261029a"></script>
+<script src="js/app.js?v=20261105a"></script>
+<script src="js/relatorios.js?v=20261105a"></script>
 </body>
 </html>

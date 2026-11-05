@@ -111,7 +111,35 @@ async function recarregar() {
        <p class="legenda-regra">A diferença entre o resultado e o fluxo de caixa são os empréstimos: dinheiro emprestado sai do caixa, mas não é gasto; a devolução entra no caixa, mas não é ganho.</p>`
     : `<div class="vazio">Nenhum lançamento em ${ano}.</div>`;
 
-  await orcamento();
+  await Promise.all([orcamento(), comparacao()]);
+}
+
+/* Um mês contra o outro, por categoria (só receitas e despesas; empréstimos ficam de fora) */
+async function comparacao() {
+  const a = $("cmp-a").value, b = $("cmp-b").value, nat = $("cmp-nat").value;
+  if (!a || !b) return;
+  const { data } = await db.from("v_por_categoria").select("mes,categoria,cor,total").eq("natureza", nat).in("mes", [a + "-01", b + "-01"]);
+  const m = new Map();
+  (data || []).forEach((c) => {
+    const l = m.get(c.categoria) || { categoria: c.categoria, cor: c.cor, a: 0, b: 0 };
+    if (String(c.mes).startsWith(a)) l.a = dif(l.a, -Number(c.total)); else l.b = dif(l.b, -Number(c.total));
+    m.set(c.categoria, l);
+  });
+  const linhas = [...m.values()].map((l) => ({ ...l, d: dif(l.b, l.a) })).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  const ta = somar(linhas, (l) => l.a), tb = somar(linhas, (l) => l.b), td = dif(tb, ta);
+  const pct = (x, y) => (x ? `${y >= x ? "+" : "−"}${Math.abs(Math.round(((y - x) / x) * 100))}%` : y ? "novo" : "—");
+  // Para despesas, subir é ruim; para receitas, é bom
+  const cor = (d) => (!d ? "muted" : (d > 0) === (nat === "receita") ? "pos" : "neg");
+  const aberto = b === mesAtual() || a === mesAtual();
+  $("tabela-comparacao").innerHTML = linhas.length
+    ? `<table><thead><tr><th>Categoria</th><th class="num">${nomeMes(a)}</th><th class="num">${nomeMes(b)}</th><th class="num">Diferença</th><th class="num">Variação</th></tr></thead>
+       <tbody>${linhas.map((l) => `<tr><td><span class="ponto" style="background:${esc(l.cor)}"></span>${esc(l.categoria)}</td>
+         <td class="num">${brl(l.a)}</td><td class="num">${brl(l.b)}</td><td class="num ${cor(l.d)}">${l.d > 0 ? "+" : l.d < 0 ? "−" : ""}${brl(Math.abs(l.d))}</td>
+         <td class="num ${cor(l.d)}">${pct(l.a, l.b)}</td></tr>`).join("")}
+       <tr><td><strong>Total</strong></td><td class="num"><strong>${brl(ta)}</strong></td><td class="num"><strong>${brl(tb)}</strong></td>
+         <td class="num ${cor(td)}"><strong>${td > 0 ? "+" : td < 0 ? "−" : ""}${brl(Math.abs(td))}</strong></td><td class="num ${cor(td)}"><strong>${pct(ta, tb)}</strong></td></tr></tbody></table>
+       ${aberto ? '<p class="legenda-regra">O mês atual ainda está em andamento: os valores dele são parciais.</p>' : ""}`
+    : `<div class="vazio">Nenhuma ${nat} nesses dois meses.</div>`;
 }
 
 /* Orçado × realizado do mês escolhido, por categoria de despesa */
@@ -145,6 +173,9 @@ iniciarPagina("relatorios", async () => {
   $("mes-orc").value = mesAtual();
   $("ano").onchange = recarregar;
   $("mes-orc").onchange = orcamento;
+  $("cmp-b").value = mesAtual();
+  $("cmp-a").value = somarMeses(mesAtual() + "-01", -1).slice(0, 7);
+  ["cmp-a", "cmp-b", "cmp-nat"].forEach((id) => ($(id).onchange = comparacao));
   $("exportar").onclick = () => baixarCSV(`relatorio-${$("ano").value}.csv`,
     ["Mes", "Receitas", "Despesas", "Resultado", "Entradas no caixa", "Saidas do caixa", "Fluxo de caixa"],
     dadosAno.map((f) => [f.mes, valorCSV(f.receitas), valorCSV(f.despesas), valorCSV(f.resultado),
