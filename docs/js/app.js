@@ -72,6 +72,8 @@ const IC = {
   documento:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/>',
   relogio:  '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
   seta:     '<polyline points="9 18 15 12 9 6"/>',
+  alvo:     '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  tesoura:  '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',
 };
 const icone = (nome, tam = 20) =>
   `<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[nome]}</svg>`;
@@ -183,6 +185,10 @@ const ICO = {
   caixa:  '<path d="M3 7h18v12H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 11h18" stroke="currentColor" stroke-width="2"/>',
   pessoas:'<circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" fill="none" stroke="currentColor" stroke-width="2"/>',
   relato: '<path d="M5 20V9m7 11V4m7 16v-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+  orcam:  '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v9l6.4 6.4" fill="none" stroke="currentColor" stroke-width="2"/>',
+  revis:  '<circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+  metas:  '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.6"/>',
+  proj:   '<path d="M3 19 9 12l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 7h5v5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
   config: '<circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m10 10 2.1 2.1m0-14.2-2.1 2.1m-10 10-2.1 2.1" stroke="currentColor" stroke-width="2"/>',
 };
 const svg = (k) => `<svg class="ico" viewBox="0 0 24 24" width="17" height="17" fill="currentColor">${ICO[k]}</svg>`;
@@ -195,6 +201,11 @@ const MENU = [
   { id: "receber",       href: "receber.html",       nome: "Contas a receber", ico: "receber" },
   { id: "caixa",         href: "caixa.html",         nome: "Caixa",            ico: "caixa" },
   { id: "pessoas",       href: "pessoas.html",       nome: "Pessoas",          ico: "pessoas" },
+  { g: "Planejamento" },
+  { id: "orcamento",     href: "orcamento.html",     nome: "Orçamento",        ico: "orcam" },
+  { id: "revisao",       href: "revisao.html",       nome: "Revisão de gastos",ico: "revis" },
+  { id: "metas",         href: "metas.html",         nome: "Metas",            ico: "metas" },
+  { id: "projecao",      href: "projecao.html",      nome: "Projeção",         ico: "proj" },
   { g: "Outros" },
   { id: "relatorios",    href: "relatorios.html",    nome: "Relatórios",       ico: "relato" },
   { id: "configuracoes", href: "configuracoes.html", nome: "Configurações",    ico: "config" },

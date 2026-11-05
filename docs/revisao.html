@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão de gastos · Finanças do Fred</title>
+<link rel="stylesheet" href="css/style.css?v=20261105a">
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<nav class="sidebar" id="sidebar"></nav>
+<main class="conteudo">
+  <div class="cabecalho">
+    <h1>Revisão de gastos</h1>
+    <div class="acoes"><input type="month" id="mes" style="width:auto"></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="card" style="margin-bottom:16px">
+    <h2>Sugestões de corte</h2>
+    <div id="sugestoes" style="overflow-x:auto"></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <h2>Economia que você já fez</h2>
+    <div id="realizada" style="overflow-x:auto"></div>
+  </div>
+  <div class="card">
+    <h2>Gasto por categoria nos últimos 6 meses</h2>
+    <div id="matriz" style="overflow-x:auto"></div>
+  </div>
+</main>
+<div id="aviso" hidden></div>
+<script src="vendor/supabase.js"></script>
+<script src="vendor/chart.umd.js"></script>
+<script src="js/app.js?v=20261105a"></script>
+<script src="js/planejamento.js?v=20261105a"></script>
+<script src="js/revisao.js?v=20261105a"></script>
+</body>
+</html>

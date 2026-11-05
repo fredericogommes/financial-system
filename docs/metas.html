@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metas · Finanças do Fred</title>
+<link rel="stylesheet" href="css/style.css?v=20261105a">
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<nav class="sidebar" id="sidebar"></nav>
+<main class="conteudo">
+  <div class="cabecalho">
+    <h1>Metas</h1>
+    <div class="acoes"><button class="btn btn-primario" id="nova-meta">+ Nova meta</button></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div id="lista-metas"></div>
+
+  <div class="modal" id="modal-meta" hidden>
+    <form class="caixa" id="form-meta">
+      <h2>Nova meta</h2>
+      <div class="form-grade">
+        <div class="col-2"><label for="m-tipo">Tipo de meta</label>
+          <select id="m-tipo">
+            <option value="juntar">Juntar um valor até uma data</option>
+            <option value="reduzir">Gastar menos em uma categoria</option>
+            <option value="reserva">Ter uma reserva de emergência</option>
+          </select></div>
+        <div class="col-2"><label for="m-nome">Nome</label><input id="m-nome" required placeholder="Ex.: Viagem de férias"></div>
+        <div class="so-juntar"><label for="m-valor">Valor a juntar</label><input id="m-valor" inputmode="decimal" placeholder="0,00"></div>
+        <div class="so-juntar"><label for="m-data">Até quando</label><input id="m-data" type="month"></div>
+        <div class="so-reduzir"><label for="m-cat">Categoria</label><select id="m-cat"></select></div>
+        <div class="so-reduzir"><label for="m-pct">Reduzir em (%)</label><input id="m-pct" type="number" min="1" max="99" value="20"></div>
+        <div class="so-reserva col-2"><label for="m-meses">Quantos meses de despesas fixas</label><input id="m-meses" type="number" min="1" max="60" value="6"></div>
+      </div>
+      <p class="legenda-regra" id="m-ajuda"></p>
+      <div class="rodape">
+        <button type="button" class="btn" id="m-cancelar">Cancelar</button>
+        <button class="btn btn-primario">Salvar meta</button>
+      </div>
+    </form>
+  </div>
+</main>
+<div id="aviso" hidden></div>
+<script src="vendor/supabase.js"></script>
+<script src="vendor/chart.umd.js"></script>
+<script src="js/app.js?v=20261105a"></script>
+<script src="js/planejamento.js?v=20261105a"></script>
+<script src="js/metas.js?v=20261105a"></script>
+</body>
+</html>
