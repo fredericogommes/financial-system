@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Configurações · Finanças do Fred</title>
-<link rel="stylesheet" href="css/style.css?v=20261028c">
+<link rel="stylesheet" href="css/style.css?v=20261029a">
 </head>
 <body>
 <header class="topbar" id="topbar"></header>
@@ -21,6 +21,18 @@
       <h2>Categorias <button class="btn-link" id="nova-categoria">+ Nova categoria</button></h2>
       <div id="lista-categorias"></div>
     </div>
+  </div>
+
+  <div class="card" id="conferencia" style="margin-bottom:16px">
+    <h2>Conferência dos dados</h2>
+    <p class="fino muted" style="margin:-6px 0 10px">Verificação automática de lançamentos que podem distorcer os números. Nada é corrigido sozinho: abra o lançamento e decida.</p>
+    <div id="lista-conferencia"><div class="carregando">Carregando...</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h2>Histórico de alterações</h2>
+    <p class="fino muted" style="margin:-6px 0 10px">As 40 alterações mais recentes em lançamentos, pessoas, contas e categorias.</p>
+    <div id="lista-historico"><div class="carregando">Carregando...</div></div>
   </div>
 
   <div class="card">
@@ -61,6 +73,7 @@
         <div><label for="k-natureza">Natureza</label><select id="k-natureza">
           <option value="despesa">Despesa</option><option value="receita">Receita</option></select></div>
         <div><label for="k-cor">Cor</label><input id="k-cor" type="color" value="#6b7280" style="padding:4px;height:38px"></div>
+        <div class="col-2" id="campo-orcamento"><label for="k-orcamento">Orçamento mensal (R$, opcional)</label><input id="k-orcamento"></div>
       </div>
       <div class="rodape">
         <button type="button" class="btn" onclick="document.getElementById('modal-categoria').hidden=true">Cancelar</button>
@@ -73,7 +86,7 @@
 <div id="aviso" hidden></div>
 <script src="vendor/supabase.js"></script>
 
-<script src="js/app.js?v=20261028c"></script>
-<script src="js/configuracoes.js?v=20261028c"></script>
+<script src="js/app.js?v=20261029a"></script>
+<script src="js/configuracoes.js?v=20261029a"></script>
 </body>
 </html>

@@ -74,14 +74,14 @@ button,input,select,textarea{font:inherit}
 .extrato .tag{margin-left:6px;white-space:nowrap}
 
 /* KPIs no mesmo padrão do painel Tech4You: ícone em quadrado preto, valor grande */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-bottom:20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
 .kpi{background:var(--card);border:1px solid var(--borda);border-radius:var(--raio);
-  box-shadow:var(--sombra);padding:20px;display:flex;align-items:flex-start;gap:16px;min-width:0}
-.kpi-icone{width:52px;height:52px;flex-shrink:0;border-radius:12px;background:var(--preto);
+  box-shadow:var(--sombra);padding:18px;display:flex;align-items:flex-start;gap:14px;min-width:0}
+.kpi-icone{width:46px;height:46px;flex-shrink:0;border-radius:12px;background:var(--preto);
   display:flex;align-items:center;justify-content:center}
 .k-verde{color:var(--verde)} .k-vermelho{color:var(--vermelho)}
 .k-amarelo{color:var(--amarelo)} .k-azul{color:#60a5fa}
-.kpi-rotulo{color:var(--texto-2);font-size:14px;margin-bottom:2px}
+.kpi-rotulo{color:var(--texto-2);font-size:13.5px;margin-bottom:2px;white-space:nowrap}
 .kpi > div:last-child{min-width:0}
 .kpi-valor{font-size:clamp(18px,1.55vw,26px);font-weight:700;letter-spacing:-.5px;white-space:nowrap}
 .kpi-nota{font-size:12.5px;margin-top:4px;color:var(--texto-2)}
@@ -201,3 +201,27 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(46,204,64,.35);bo
 .alerta-badge{min-width:30px;height:22px;padding:0 8px;border-radius:999px;color:#fff;font-size:12px;font-weight:700;
   display:inline-flex;align-items:center;justify-content:center}
 .alerta-seta{color:var(--texto-2);display:flex}
+
+/* ---------- Revisão: cartões clicáveis, atalhos e filtros ativos ---------- */
+a.kpi-link{color:inherit;transition:border-color .12s, box-shadow .12s}
+a.kpi-link:hover{border-color:#c9cdd2;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.kpi-ajuda{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;
+  background:#eef0f2;color:var(--texto-2);font-size:10px;font-weight:700;cursor:help;vertical-align:1px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-4px 0 12px}
+.chip{border:1px solid var(--borda);background:#fff;border-radius:999px;padding:4px 11px;font-size:12px;
+  font-weight:600;color:var(--texto);cursor:pointer}
+.chip:hover{background:#f6f7f8}
+.chip-ativo{background:#eef7f0;border-color:#cfe9d4;color:#17692a;cursor:default;display:inline-flex;align-items:center;gap:6px}
+.chip-ativo button{border:0;background:none;color:#17692a;font-size:14px;line-height:1;cursor:pointer;padding:0}
+.aviso-lista{margin:10px 0 0;padding:9px 12px;border-radius:8px;background:#fdf0d7;color:#8a5a06;font-size:12.5px}
+.faixas{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:700px){.faixas{grid-template-columns:repeat(2,1fr)}}
+.faixa{background:var(--card);border:1px solid var(--borda);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left}
+.faixa:hover{border-color:#c9cdd2}
+.faixa.ativa{border-color:var(--vermelho);box-shadow:inset 0 0 0 1px var(--vermelho)}
+.faixa-rotulo{font-size:12px;color:var(--texto-2)}
+.faixa-valor{font-size:16px;font-weight:700;margin-top:2px}
+.barra{height:8px;border-radius:99px;background:#eef0f2;overflow:hidden;min-width:80px}
+.barra > span{display:block;height:100%;background:var(--verde)}
+.barra.estourou > span{background:var(--vermelho)}
+.legenda-regra{font-size:12px;color:var(--texto-2);margin:6px 0 0}

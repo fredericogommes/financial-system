@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard · Finanças do Fred</title>
-<link rel="stylesheet" href="css/style.css?v=20261028c">
+<link rel="stylesheet" href="css/style.css?v=20261029a">
 </head>
 <body>
 <header class="topbar" id="topbar"></header>
@@ -13,7 +13,7 @@
 
   <div class="barra-acoes">
     <button class="btn btn-primario" onclick="abrirLancamento(null,{tipo:'receita'})">+ Receita</button>
-    <button class="btn btn-escuro" onclick="abrirLancamento(null,{tipo:'despesa',status:'pendente'})">Registrar conta</button>
+    <button class="btn btn-escuro" onclick="abrirLancamento(null,{tipo:'despesa',status:'pendente'})">Registrar conta a pagar</button>
     <button class="btn" onclick="abrirLancamento(null,{tipo:'despesa'})">+ Despesa</button>
   </div>
 
@@ -57,7 +57,7 @@
     <div class="painel">
       <div class="painel-topo">
         <div class="painel-titulo" id="titulo-vencimentos"></div>
-        <a class="btn-contorno" href="pagar.html">Ver todos</a>
+        <div style="display:flex;gap:6px"><a class="btn-contorno" href="pagar.html">A pagar</a><a class="btn-contorno" href="receber.html">A receber</a></div>
       </div>
       <div id="vencimentos"></div>
     </div>
@@ -74,7 +74,7 @@
 <div id="aviso" hidden></div>
 <script src="vendor/supabase.js"></script>
 <script src="vendor/chart.umd.js"></script>
-<script src="js/app.js?v=20261028c"></script>
-<script src="js/index.js?v=20261028c"></script>
+<script src="js/app.js?v=20261029a"></script>
+<script src="js/index.js?v=20261029a"></script>
 </body>
 </html>

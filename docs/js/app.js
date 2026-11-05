@@ -32,6 +32,21 @@ function lerValor(t) {
   return v > 0 ? Math.round(v * 100) / 100 : null;
 }
 
+/* Contas em centavos para não acumular erro de ponto flutuante */
+const centavos = (v) => Math.round(Number(v || 0) * 100);
+const somar = (lista, f = (x) => x.valor) => lista.reduce((t, x) => t + centavos(f(x)), 0) / 100;
+const dif = (a, b) => (centavos(a) - centavos(b)) / 100;
+
+/* Datas em texto "AAAA-MM-DD" no fuso do navegador */
+const isoData = (d) => d.toLocaleDateString("sv-SE");
+function somarDias(iso, n) { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return isoData(d); }
+/* Mesmo dia nos meses seguintes; dia 31 vira o último dia do mês quando ele não existe */
+function somarMeses(iso, n) {
+  const [a, m, dia] = iso.split("-").map(Number);
+  const ultimo = new Date(a, m - 1 + n + 1, 0).getDate();
+  return isoData(new Date(a, m - 1 + n, Math.min(dia, ultimo), 12));
+}
+
 /* Campo de valor com vírgula e ponto automáticos: digitar 123456 mostra 1.234,56 */
 const valorParaCampo = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function mascaraMoeda(input) {
@@ -61,11 +76,75 @@ const IC = {
 const icone = (nome, tam = 20) =>
   `<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[nome]}</svg>`;
 
-/* cor: verde | vermelho | amarelo | azul. nota: linha pequena abaixo do valor */
-function kpi(rotulo, valor, cor, ico, nota = "") {
-  return `<div class="kpi"><div class="kpi-icone k-${cor}">${icone(ico, 26)}</div>
-    <div><div class="kpi-rotulo">${rotulo}</div><div class="kpi-valor">${valor}</div>
-    ${nota ? `<div class="kpi-nota">${nota}</div>` : ""}</div></div>`;
+/* cor: verde | vermelho | amarelo | azul. nota: linha pequena abaixo do valor.
+   link: ao clicar, abre os lançamentos que formam o número. ajuda: como o número é calculado */
+function kpi(rotulo, valor, cor, ico, nota = "", link = "", ajuda = "") {
+  const tag = link ? "a" : "div";
+  return `<${tag} class="kpi${link ? " kpi-link" : ""}"${link ? ` href="${link}"` : ""}${ajuda ? ` title="${esc(ajuda)}"` : ""}>
+    <div class="kpi-icone k-${cor}">${icone(ico, 26)}</div>
+    <div><div class="kpi-rotulo">${rotulo}${ajuda ? ' <span class="kpi-ajuda">?</span>' : ""}</div><div class="kpi-valor">${valor}</div>
+    ${nota ? `<div class="kpi-nota">${nota}</div>` : ""}</div></${tag}>`;
+}
+
+/* ---------------- Filtros comuns ---------------- */
+/* Atalhos de período: preenchem os campos De/Até e recarregam */
+const PERIODOS = {
+  mes:       () => [mesAtual() + "-01", somarDias(somarMeses(mesAtual() + "-01", 1), -1)],
+  anterior:  () => { const i = somarMeses(mesAtual() + "-01", -1); return [i, somarDias(mesAtual() + "-01", -1)]; },
+  prox7:     () => [hoje(), somarDias(hoje(), 7)],
+  prox30:    () => [hoje(), somarDias(hoje(), 30)],
+  ult30:     () => [somarDias(hoje(), -30), hoje()],
+  ano:       () => [hoje().slice(0, 4) + "-01-01", hoje().slice(0, 4) + "-12-31"],
+  tudo:      () => ["", ""],
+};
+const NOMES_PERIODO = { prox7: "Próximos 7 dias", mes: "Este mês", anterior: "Mês passado", ult30: "Últimos 30 dias", prox30: "Próximos 30 dias", ano: "Este ano", tudo: "Tudo" };
+function atalhosPeriodo(elId, opcoes, aoMudar) {
+  $(elId).innerHTML = opcoes.map((k) => `<button type="button" class="chip" data-p="${k}">${NOMES_PERIODO[k]}</button>`).join("");
+  $(elId).onclick = (e) => {
+    const k = e.target.dataset?.p; if (!k) return;
+    [$("f-de").value, $("f-ate").value] = PERIODOS[k]();
+    aoMudar();
+  };
+}
+/* Mostra os filtros em uso como etiquetas; cada uma tem um x para tirar só ela */
+function filtrosAtivos(elId, itens, aoMudar) {
+  const ativos = itens.filter((i) => i.valor);
+  $(elId).innerHTML = ativos.length
+    ? `<span class="fino muted">Filtros:</span> ` + ativos.map((i, n) =>
+        `<span class="chip chip-ativo">${esc(i.rotulo)}: ${esc(i.valor)} <button type="button" data-n="${n}" aria-label="Tirar filtro">×</button></span>`).join("")
+    : "";
+  $(elId).onclick = (e) => {
+    const n = e.target.dataset?.n; if (n === undefined) return;
+    ativos[n].limpar(); aoMudar();
+  };
+}
+const textoSelect = (id) => { const s = $(id); return s.value ? s.options[s.selectedIndex].text : ""; };
+
+/* Rodapé de lista: deixa claro se os totais são de tudo ou só do que apareceu */
+function rodapeLista(mostrados, total, limite) {
+  return total > mostrados
+    ? `<p class="aviso-lista">Mostrando ${mostrados} de ${total} lançamentos (limite de ${limite}). Os totais acima consideram só os mostrados: refine os filtros para ver tudo.</p>`
+    : `<p class="fino muted" style="margin:10px 0 0">${total} lançamento(s). Os totais acima consideram todos eles.</p>`;
+}
+
+function baixarCSV(nome, cabecalho, linhas) {
+  const csv = [cabecalho, ...linhas]
+    .map((l) => l.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
+  const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = nome; a.click();
+  URL.revokeObjectURL(url);
+}
+const valorCSV = (v) => Number(v || 0).toFixed(2).replace(".", ",");
+
+/* Evita salvar duas vezes com clique duplo: trava o botão enquanto grava */
+async function travar(form, tarefa) {
+  const botao = form.querySelector("button:not([type=button])");
+  if (botao?.disabled) return;
+  const texto = botao?.textContent;
+  if (botao) { botao.disabled = true; botao.textContent = "Salvando..."; }
+  try { await tarefa(); }
+  finally { if (botao) { botao.disabled = false; botao.textContent = texto; } }
 }
 
 function avisar(texto, erro = false) {
@@ -84,12 +163,15 @@ const TIPOS = {
   recebi:            { rotulo: "Recebi de alguém",   direcao:  1, pessoa: true, status: "liquidado" },
   // Só existe no formulário: no banco é um "recebi" em aberto
   a_receber:         { rotulo: "A receber de alguém", direcao: 1, pessoa: true, status: "pendente", banco: "recebi" },
-  paguei:            { rotulo: "Paguei alguém",      direcao: -1, pessoa: true },
+  paguei:            { rotulo: "Paguei alguém",      direcao: -1, pessoa: true, status: "liquidado" },
+  // Só existe no formulário: no banco é um "paguei" em aberto
+  a_pagar:           { rotulo: "A pagar a alguém",   direcao: -1, pessoa: true, status: "pendente", banco: "paguei" },
   emprestei:         { rotulo: "Emprestei",          direcao: -1, pessoa: true, status: "liquidado" },
-  peguei_emprestado: { rotulo: "Peguei emprestado",  direcao:  1, pessoa: true },
+  peguei_emprestado: { rotulo: "Peguei emprestado",  direcao:  1, pessoa: true, status: "liquidado" },
 };
 const rotuloTipo = (t) => (TIPOS[t] ? TIPOS[t].rotulo : t);
-const tipoDoForm = (m) => (m.tipo === "recebi" && m.status === "pendente" ? "a_receber" : m.tipo);
+const tipoDoForm = (m) => m.status !== "pendente" ? m.tipo
+  : m.tipo === "recebi" ? "a_receber" : m.tipo === "paguei" ? "a_pagar" : m.tipo;
 const rotuloMov = (m) => rotuloTipo(tipoDoForm(m));
 const entra = (t) => TIPOS[t] && TIPOS[t].direcao === 1;
 
@@ -190,13 +272,20 @@ function modalLancamento() {
         <div><label for="x-valor">Valor (R$)</label><input id="x-valor" required></div>
         <div id="campo-status"><label for="x-status">Situação</label>
           <select id="x-status"><option value="liquidado">Já aconteceu</option><option value="pendente">Em aberto</option></select></div>
-        <div><label for="x-data">Data</label><input id="x-data" type="date" required></div>
+        <div><label for="x-data">Data do lançamento</label><input id="x-data" type="date" required></div>
         <div><label for="x-venc" id="rotulo-venc">Vencimento</label><input id="x-venc" type="date"></div>
+        <div id="campo-baixa"><label for="x-baixa">Data da baixa (pagamento)</label><input id="x-baixa" type="date"></div>
         <div><label for="x-categoria">Categoria</label><select id="x-categoria"></select></div>
         <div><label for="x-conta">Conta</label><select id="x-conta"></select></div>
         <div id="campo-pessoa"><label for="x-pessoa">Pessoa</label><select id="x-pessoa"></select></div>
         <div class="col-2"><label for="x-desc">Descrição</label><input id="x-desc" placeholder="ex.: conta de luz de outubro"></div>
+        <div id="campo-parcelas"><label for="x-parcelas">Parcelas</label>
+          <input id="x-parcelas" type="number" min="1" max="60" value="1"></div>
+        <div id="campo-modo"><label for="x-modo">O valor informado é</label>
+          <select id="x-modo"><option value="total">O total (divide entre as parcelas)</option>
+            <option value="cada">De cada parcela (repete todo mês)</option></select></div>
       </div>
+      <p class="fino muted" id="x-resumo" style="margin:10px 0 0"></p>
       <div class="rodape">
         <button type="button" class="btn" id="x-cancelar">Cancelar</button>
         <button class="btn btn-primario">Salvar</button>
@@ -206,8 +295,10 @@ function modalLancamento() {
   $("x-cancelar").onclick = () => (el.hidden = true);
   el.onclick = (ev) => { if (ev.target === el) el.hidden = true; };
   $("x-tipo").onchange = aplicarTipo;
+  $("x-status").onchange = aplicarTipo;
+  ["x-parcelas", "x-modo", "x-valor", "x-venc"].forEach((i) => $(i).addEventListener("input", resumoParcelas));
   mascaraMoeda($("x-valor"));
-  $("form-lanc").onsubmit = salvarLancamento;
+  $("form-lanc").onsubmit = (e) => { e.preventDefault(); travar(e.target, salvarLancamento); };
 }
 
 function aplicarTipo() {
@@ -216,12 +307,36 @@ function aplicarTipo() {
   $("campo-pessoa").style.display = TIPOS[t].pessoa ? "" : "none";
   // Empréstimo já saiu do caixa; a data de devolução vira o vencimento da conta a receber
   $("campo-status").style.display = TIPOS[t].status ? "none" : "";
-  $("rotulo-venc").textContent = t === "emprestei" ? "Devolve até" : "Vencimento";
+  const emprestimo = t === "emprestei" || t === "peguei_emprestado";
+  const status = TIPOS[t].status ?? $("x-status").value;
+  $("rotulo-venc").textContent = t === "emprestei" ? "Devolve até" : t === "peguei_emprestado" ? "Pago até" : "Vencimento";
+  $("campo-baixa").style.display = status === "liquidado" && !emprestimo ? "" : "none";
+  // Parcelar só faz sentido em conta nova e em aberto
+  const parcela = !$("x-id").value && status === "pendente";
+  $("campo-parcelas").style.display = parcela ? "" : "none";
+  $("campo-modo").style.display = parcela && Number($("x-parcelas").value) > 1 ? "" : "none";
+  resumoParcelas();
   const cats = Aux.categorias.filter((c) => c.natureza === natureza);
   const atual = $("x-categoria").value;
   $("x-categoria").innerHTML = `<option value="">Sem categoria</option>` +
     cats.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
   if (cats.some((c) => String(c.id) === atual)) $("x-categoria").value = atual;
+}
+
+/* Divide o valor em parcelas exatas em centavos; a diferença de arredondamento vai na 1ª */
+function dividirParcelas(total, n) {
+  const c = centavos(total), base = Math.floor(c / n);
+  return Array.from({ length: n }, (_, i) => (base + (i === 0 ? c - base * n : 0)) / 100);
+}
+function resumoParcelas() {
+  const el = $("x-resumo"); if (!el) return;
+  const n = Number($("x-parcelas").value) || 1;
+  const valor = lerValor($("x-valor").value);
+  if ($("campo-parcelas").style.display === "none" || n <= 1 || !valor) { el.textContent = ""; return; }
+  const partes = $("x-modo").value === "cada" ? Array(n).fill(valor) : dividirParcelas(valor, n);
+  const venc = $("x-venc").value;
+  el.textContent = `${n} parcelas: ${partes[0] === partes[n - 1] ? `${n} × ${brl(partes[0])}` : `1ª de ${brl(partes[0])} e ${n - 1} de ${brl(partes[1])}`}` +
+    ` = ${brl(somar(partes, (x) => x))}` + (venc ? `, de ${dataBR(venc)} a ${dataBR(somarMeses(venc, n - 1))}.` : ". Informe o 1º vencimento.");
 }
 
 let lancAtual = null;
@@ -247,35 +362,65 @@ async function abrirLancamento(mov, padrao = {}) {
   $("x-conta").value = mov?.conta_id ?? (Aux.contas[0]?.id ?? "");
   $("x-pessoa").value = mov?.pessoa_id ?? padrao.pessoa_id ?? "";
   $("x-desc").value = mov?.descricao ?? "";
+  $("x-baixa").value = mov?.liquidado_em ?? "";
+  $("x-parcelas").value = 1;
+  aplicarTipo();
   $("modal-lanc").hidden = false;
   $("x-valor").focus();
 }
 
-async function salvarLancamento(e) {
-  e.preventDefault();
+async function salvarLancamento() {
   const valor = lerValor($("x-valor").value);
-  if (!valor) return avisar("Valor inválido.", true);
+  if (!valor) return avisar("Informe um valor maior que zero.", true);
   const escolhido = $("x-tipo").value;
   const tipo = TIPOS[escolhido].banco ?? escolhido;
   const pessoa_id = TIPOS[escolhido].pessoa ? Number($("x-pessoa").value) || null : null;
   if (TIPOS[escolhido].pessoa && !pessoa_id) return avisar("Escolha a pessoa desse lançamento.", true);
   const status = TIPOS[escolhido].status ?? $("x-status").value;
+  const data = $("x-data").value;
+  const vencimento = $("x-venc").value || null;
+  const baixa = status === "liquidado" ? ($("x-baixa").value || data) : null;
+  // Conta em aberto precisa de vencimento para entrar nos vencidos e na projeção.
+  // Exceção: contas que vieram de empréstimo, que podem não ter prazo combinado.
+  if (status === "pendente" && !vencimento && !lancAtual?.referente_a)
+    return avisar("Informe o vencimento da conta em aberto.", true);
+  if (baixa && baixa > hoje() && !confirm(`A data da baixa (${dataBR(baixa)}) está no futuro. Salvar mesmo assim?`)) return;
+
   const dados = {
-    tipo, valor, pessoa_id, status,
-    data: $("x-data").value,
-    vencimento: $("x-venc").value || null,
+    tipo, valor, pessoa_id, status, data, vencimento,
     categoria_id: Number($("x-categoria").value) || null,
     conta_id: Number($("x-conta").value) || null,
     descricao: $("x-desc").value.trim() || null,
-    liquidado_em: status === "liquidado" ? lancAtual?.liquidado_em || $("x-data").value : null,
+    liquidado_em: baixa,
   };
   const id = $("x-id").value;
-  const { error } = id
-    ? await db.from("movimentacoes").update(dados).eq("id", id)
-    : await db.from("movimentacoes").insert(dados);
+
+  if (!id) {
+    // Aviso de possível duplicidade: mesmo tipo, pessoa, valor e data
+    let q = db.from("movimentacoes").select("id", { count: "exact", head: true })
+      .eq("tipo", tipo).eq("valor", valor).eq("data", data);
+    q = pessoa_id ? q.eq("pessoa_id", pessoa_id) : q.is("pessoa_id", null);
+    const { count } = await q;
+    if (count && !confirm(`Já existe ${count === 1 ? "um lançamento igual" : count + " lançamentos iguais"} (mesmo tipo, valor e data). Salvar outro?`)) return;
+  }
+
+  const n = Math.min(Math.max(Number($("x-parcelas").value) || 1, 1), 60);
+  let error;
+  if (!id && status === "pendente" && n > 1) {
+    const partes = $("x-modo").value === "cada" ? Array(n).fill(valor) : dividirParcelas(valor, n);
+    const base = dados.descricao || rotuloTipo(escolhido);
+    ({ error } = await db.from("movimentacoes").insert(partes.map((v, i) => ({
+      ...dados, valor: v, vencimento: somarMeses(vencimento, i),
+      descricao: `${base} (${i + 1}/${n})`, parcela: `${i + 1}/${n}`,
+    }))));
+  } else {
+    ({ error } = id
+      ? await db.from("movimentacoes").update(dados).eq("id", id)
+      : await db.from("movimentacoes").insert(dados));
+  }
   if (error) return avisar("Erro ao salvar: " + error.message, true);
   $("modal-lanc").hidden = true;
-  avisar("Lançamento salvo.");
+  avisar(n > 1 && !id && status === "pendente" ? `${n} parcelas lançadas.` : "Lançamento salvo.");
   if (typeof recarregar === "function") recarregar();
 }
 
@@ -295,6 +440,8 @@ function modalBaixa() {
       <div class="form-grade">
         <div><label for="b-valor">Valor pago/recebido (R$)</label><input id="b-valor" required></div>
         <div><label for="b-data">Data da baixa</label><input id="b-data" type="date" required></div>
+        <div><label for="b-desconto">Desconto concedido (R$)</label><input id="b-desconto"></div>
+        <div><label for="b-juros">Juros / multa (R$)</label><input id="b-juros"></div>
         <div class="col-2"><label for="b-conta">Conta</label><select id="b-conta"></select></div>
       </div>
       <p class="fino muted" id="b-resto" style="margin:12px 0 0"></p>
@@ -306,17 +453,24 @@ function modalBaixa() {
   document.body.appendChild(el);
   $("b-cancelar").onclick = () => (el.hidden = true);
   el.onclick = (ev) => { if (ev.target === el) el.hidden = true; };
-  mascaraMoeda($("b-valor"));
-  $("b-valor").addEventListener("input", mostrarResto);
-  $("form-baixa").onsubmit = confirmarBaixa;
+  ["b-valor", "b-desconto", "b-juros"].forEach((i) => { mascaraMoeda($(i)); $(i).addEventListener("input", mostrarResto); });
+  $("form-baixa").onsubmit = (e) => { e.preventDefault(); travar(e.target, confirmarBaixa); };
 }
 
+/* Quanto do valor em aberto esta baixa quita: pago − juros + desconto */
+function calculoBaixa() {
+  const pago = lerValor($("b-valor").value) || 0;
+  const desconto = lerValor($("b-desconto").value) || 0;
+  const juros = lerValor($("b-juros").value) || 0;
+  const quitado = (centavos(pago) - centavos(juros) + centavos(desconto)) / 100;
+  return { pago, desconto, juros, quitado, resto: dif(baixaAtual.valor, quitado) };
+}
 function mostrarResto() {
-  const v = lerValor($("b-valor").value) || 0;
-  const resto = Math.round((baixaAtual.valor - v) * 100) / 100;
-  $("b-resto").textContent = resto > 0
-    ? `Baixa parcial: ${brl(resto)} continuam em aberto.`
-    : "Baixa total: o lançamento sai da lista de abertos.";
+  const c = calculoBaixa();
+  $("b-resto").innerHTML = c.quitado <= 0 ? "Informe o valor."
+    : c.resto > 0 ? `<strong>Baixa parcial:</strong> quita ${brl(c.quitado)} e ${brl(c.resto)} continuam em aberto.`
+    : c.resto < 0 ? `<strong>Atenção:</strong> o valor quita ${brl(-c.resto)} a mais do que está em aberto. Se for juros ou multa, informe no campo ao lado.`
+    : `<strong>Baixa total:</strong> o lançamento sai da lista de abertos.`;
 }
 
 async function liquidar(id) {
@@ -328,6 +482,7 @@ async function liquidar(id) {
   $("b-info").textContent = [rotuloMov(m), m.descricao, m.pessoa_nome,
     m.vencimento && "vence " + dataBR(m.vencimento), "em aberto " + brl(m.valor)].filter(Boolean).join(" · ");
   $("b-valor").value = valorParaCampo(m.valor);
+  $("b-desconto").value = ""; $("b-juros").value = "";
   $("b-data").value = hoje();
   $("b-conta").innerHTML = `<option value="">Sem conta</option>` +
     Aux.contas.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
@@ -337,35 +492,46 @@ async function liquidar(id) {
   $("b-valor").focus();
 }
 
-async function confirmarBaixa(e) {
-  e.preventDefault();
+async function confirmarBaixa() {
   const m = baixaAtual;
-  const valor = lerValor($("b-valor").value);
-  if (!valor) return avisar("Valor inválido.", true);
+  const c = calculoBaixa();
+  if (!c.pago || c.quitado <= 0) return avisar("Informe o valor pago ou recebido.", true);
   const quando = $("b-data").value;
+  if (quando > hoje() && !confirm(`A data da baixa (${dataBR(quando)}) está no futuro. Confirmar mesmo assim?`)) return;
   const conta_id = Number($("b-conta").value) || null;
-  const resto = Math.round((m.valor - valor) * 100) / 100;
   let error;
-  if (resto > 0) {
+  if (c.resto > 0) {
     // Parcial: o que foi pago vira um lançamento baixado e o resto continua em aberto
     ({ error } = await db.from("movimentacoes").insert({
-      tipo: m.tipo, pessoa_id: m.pessoa_id, valor, data: quando, liquidado_em: quando, status: "liquidado",
+      tipo: m.tipo, pessoa_id: m.pessoa_id, valor: c.pago, desconto: c.desconto, juros: c.juros,
+      data: quando, liquidado_em: quando, status: "liquidado",
       vencimento: m.vencimento, descricao: `${m.descricao || rotuloTipo(m.tipo)} (parcial)`,
       categoria_id: m.categoria_id, conta_id, referente_a: m.referente_a ?? m.id,
     }));
-    if (!error) ({ error } = await db.from("movimentacoes").update({ valor: resto }).eq("id", m.id));
+    if (!error) ({ error } = await db.from("movimentacoes").update({ valor: c.resto }).eq("id", m.id));
   } else {
-    ({ error } = await db.from("movimentacoes")
-      .update({ status: "liquidado", liquidado_em: quando, valor, conta_id }).eq("id", m.id));
+    ({ error } = await db.from("movimentacoes").update({
+      status: "liquidado", liquidado_em: quando, valor: c.pago, desconto: c.desconto, juros: c.juros, conta_id,
+    }).eq("id", m.id));
   }
   if (error) return avisar("Erro: " + error.message, true);
   $("modal-baixa").hidden = true;
-  avisar(resto > 0 ? `Baixa parcial registrada. Restam ${brl(resto)} em aberto.` : "Baixa registrada.");
+  avisar(c.resto > 0 ? `Baixa parcial registrada. Restam ${brl(c.resto)} em aberto.` : "Baixa registrada.");
+  if (typeof recarregar === "function") recarregar();
+}
+
+/* Desfaz uma baixa: o lançamento volta a ficar em aberto (fica registrado no histórico) */
+async function reabrir(id) {
+  if (!confirm("Desfazer a baixa? O valor volta para em aberto e o saldo do caixa é recalculado.")) return;
+  const { error } = await db.from("movimentacoes")
+    .update({ status: "pendente", liquidado_em: null, desconto: 0, juros: 0 }).eq("id", id);
+  if (error) return avisar("Erro: " + error.message, true);
+  avisar("Baixa desfeita. O lançamento voltou para em aberto.");
   if (typeof recarregar === "function") recarregar();
 }
 
 async function excluirLancamento(id) {
-  if (!confirm("Excluir este lançamento?")) return;
+  if (!confirm("Excluir este lançamento? Ele sai de todos os totais (a exclusão fica registrada no histórico).")) return;
   const { error } = await db.from("movimentacoes").delete().eq("id", id);
   if (error) return avisar("Erro: " + error.message, true);
   avisar("Lançamento excluído.");

@@ -17,20 +17,23 @@ async function recarregar(semFicha = false) {
     const { data } = await db.rpc("buscar_pessoas", { termo });
     ids = (data || []).map((p) => p.id);
   }
-  const { data: saldos, error } = await db.from("saldo_por_pessoa").select("*").order("saldo", { ascending: false });
+  const { data: saldos, error } = await db.from("saldo_por_pessoa").select("*").order("em_aberto", { ascending: false });
   if (error) return avisar("Erro: " + error.message, true);
 
   const filtro = $("f-saldo").value;
   let lista = saldos.filter((s) =>
     filtro === "todos" ? true :
-    filtro === "devem" ? Number(s.saldo) > 0 :
-    filtro === "devo" ? Number(s.saldo) < 0 : Number(s.saldo) !== 0);
+    filtro === "devem" ? Number(s.em_aberto) > 0 :
+    filtro === "devo" ? Number(s.em_aberto) < 0 : Number(s.em_aberto) !== 0 || Number(s.saldo) !== 0);
   if (ids) lista = lista.filter((s) => ids.includes(s.pessoa_id));
 
-  const total = (f) => saldos.filter(f).reduce((t, s) => t + Math.abs(Number(s.saldo)), 0);
+  // Mesmo critério das contas a pagar/receber: soma do que está em aberto com cada pessoa
+  const total = (f) => Math.abs(somar(saldos.filter(f), (s) => s.em_aberto));
   $("kpis").innerHTML =
-    kpi("Total em aberto", brl(total((s) => s.saldo > 0)), "verde", "receber") +
-    kpi("Total de débitos", brl(total((s) => s.saldo < 0)), "vermelho", "pagar") +
+    kpi("Total em aberto", brl(total((s) => s.em_aberto > 0)), "verde", "receber", "o que as pessoas te devem", "receber.html",
+        "Soma do que cada pessoa tem em aberto com você (contas a receber com pessoa, menos o que você deve a ela).") +
+    kpi("Total de débitos", brl(total((s) => s.em_aberto < 0)), "vermelho", "pagar", "o que você deve a pessoas", "pagar.html",
+        "Soma do que você tem em aberto a pagar para pessoas.") +
     kpi("Pessoas cadastradas", saldos.length, "azul", "pessoas");
 
   $("lista").innerHTML = lista.length
@@ -38,7 +41,7 @@ async function recarregar(semFicha = false) {
        <tbody>${lista.map((s) => `<tr style="cursor:pointer" onclick="abrirPessoa(${s.pessoa_id})">
           <td><strong>${esc(s.nome)}</strong></td>
           <td class="fino muted">${dataBR(s.ultima_movimentacao)}</td>
-          <td class="num">${textoSaldo(s.saldo)}</td></tr>`).join("")}</tbody></table>`
+          <td class="num">${textoSaldo(s.em_aberto)}${dif(s.saldo, s.em_aberto) ? ' <span class="tag t-amarelo" title="Empréstimo sem conta em aberto: veja Configurações → Conferência dos dados">conferir</span>' : ""}</td></tr>`).join("")}</tbody></table>`
     : `<div class="vazio">Ninguém encontrado.${termo ? ` <button class="btn-link" onclick="formPessoa({nome:${esc(JSON.stringify(termo))}})">Cadastrar "${esc(termo)}"</button>` : ""}</div>`;
 
   if (pessoaAtual && !semFicha) abrirPessoa(pessoaAtual.id, true);
@@ -58,7 +61,8 @@ async function abrirPessoa(id, silencioso) {
     <h2>${esc(p.nome)} <button class="btn-link" onclick="formPessoa(pessoaAtual)">Editar</button>
       <button class="btn-link" style="color:var(--vermelho)" onclick="excluirPessoa()">Excluir pessoa</button></h2>
     <p class="fino muted" style="margin:-6px 0 10px">${esc(info) || "Sem dados de contato."}</p>
-    <p style="font-size:17px;margin:0 0 14px"><span class="muted fino">Em aberto</span> ${textoSaldo(s?.saldo ?? 0)}</p>
+    <p style="font-size:17px;margin:0 0 6px"><span class="muted fino">Em aberto</span> ${textoSaldo(s?.em_aberto ?? 0)}</p>
+    ${s && dif(s.saldo, s.em_aberto) ? `<p class="aviso-lista" style="margin:0 0 12px">Empréstimos ainda não devolvidos somam ${brl(s.saldo)}, mas só ${brl(s.em_aberto)} estão em aberto. Falta conta a receber de ${brl(dif(s.saldo, s.em_aberto))}. <a class="btn-link" href="configuracoes.html#conferencia">Ver conferência</a></p>` : '<div style="height:8px"></div>'}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       <button class="btn btn-primario" onclick="abrirLancamento(null,{tipo:'emprestei',pessoa_id:${p.id}})">Emprestar</button>
       <button class="btn" onclick="abrirLancamento(null,{tipo:'recebi',pessoa_id:${p.id}})">Recebi</button>
